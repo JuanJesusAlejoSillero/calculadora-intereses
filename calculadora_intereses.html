@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Calculadora de Intereses · Ahorro + IRPF</title>
   <script>
-    (function() {
+    (function () {
       const storageKey = 'theme';
       const storedTheme = localStorage.getItem(storageKey);
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -26,8 +27,8 @@
       --text-primary: #1f1e1b;
       --text-secondary: #5c5a55;
       --text-tertiary: #85827b;
-      --accent-blue: #6c47ff;
-      --accent-blue-hover: #8a6bff;
+      --accent-blue: #0b8f6e;
+      --accent-blue-hover: #17a27f;
       --accent-green: #0b8f6e;
       --accent-red: #e35f5f;
       --accent-orange: #ec8c49;
@@ -45,8 +46,8 @@
       --text-primary: #eceff4;
       --text-secondary: #b3b9c5;
       --text-tertiary: #8a8f99;
-      --accent-blue: #8a6bff;
-      --accent-blue-hover: #a07eff;
+      --accent-blue: #3dd0c7;
+      --accent-blue-hover: #66e0d8;
       --accent-green: #3dd0c7;
       --accent-red: #ff7d7d;
       --accent-orange: #ffb976;
@@ -62,7 +63,8 @@
       padding: 0;
     }
 
-    html, body {
+    html,
+    body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -86,7 +88,7 @@
 
     .header-toolbar {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
@@ -120,10 +122,12 @@
       cursor: pointer;
       font-size: 0.85rem;
       font-weight: 500;
-      display: inline-flex;
+      display: flex;
       align-items: center;
+      min-height: 42px;
       gap: 0.5rem;
       transition: all 0.2s;
+      z-index: 10;
       font-family: inherit;
       color: inherit;
     }
@@ -132,6 +136,17 @@
       background: var(--accent-blue);
       color: white;
       border-color: var(--accent-blue);
+    }
+
+    .toolbar-switch[aria-pressed="true"] {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      background: rgba(11, 143, 110, 0.08);
+    }
+
+    .toolbar-switch:hover[aria-pressed="true"] {
+      color: white;
+      background: var(--accent-blue);
     }
 
     h1 {
@@ -152,7 +167,7 @@
     }
 
     .title-text {
-      background: linear-gradient(135deg, var(--accent-blue) 0%, #a07eff 100%);
+      background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -162,6 +177,23 @@
       color: var(--text-secondary);
       font-size: 1rem;
       font-weight: 400;
+    }
+
+    .repo-link {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .repo-link a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      border-bottom: 1px dashed var(--accent-blue);
+    }
+
+    .repo-link a:hover {
+      color: var(--accent-blue-hover);
+      border-bottom-color: var(--accent-blue-hover);
     }
 
     .calculator {
@@ -200,7 +232,9 @@
       text-transform: uppercase;
       letter-spacing: 0.6px;
     }
-    .field input, .field select {
+
+    .field input,
+    .field select {
       background: var(--bg-primary);
       border: 1px solid var(--border-color);
       color: var(--text-primary);
@@ -211,10 +245,11 @@
       font-family: inherit;
     }
 
-    .field input:focus, .field select:focus {
+    .field input:focus,
+    .field select:focus {
       outline: none;
       border-color: var(--accent-blue);
-      box-shadow: 0 0 0 3px rgba(108, 71, 255, 0.15);
+      box-shadow: 0 0 0 3px rgba(11, 143, 110, 0.15);
     }
 
     .toggle-row {
@@ -237,6 +272,13 @@
       font-size: 0.9rem;
       font-weight: 500;
       transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toggle-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateY(-1px);
     }
 
     .toggle-btn .dot {
@@ -262,6 +304,11 @@
     }
 
     .toggle-btn.active {
+      border-color: var(--accent-green);
+      color: var(--text-primary);
+    }
+
+    .toggle-btn.active:hover {
       border-color: var(--accent-green);
       color: var(--text-primary);
     }
@@ -292,29 +339,41 @@
       align-items: center;
       gap: 0.25rem;
       padding: 0.25rem;
-      border-radius: 999px;
+      border-radius: 40px;
       border: 1px solid var(--border-color);
-      background: var(--bg-tertiary);
+      background: var(--bg-secondary);
       flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
     }
 
     .segmented-btn {
       border: none;
       background: transparent;
       color: var(--text-secondary);
-      padding: 0.45rem 0.95rem;
+      padding: 0.45rem 0.9rem;
       border-radius: 999px;
       cursor: pointer;
       font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 500;
       transition: all 0.2s ease;
       font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .segmented-btn:hover {
+      color: var(--accent-blue);
+      background: rgba(11, 143, 110, 0.1);
     }
 
     .segmented-btn.active {
       background: var(--accent-blue);
       color: white;
-      box-shadow: 0 4px 12px rgba(108, 71, 255, 0.18);
+      box-shadow: 0 2px 6px rgba(11, 143, 110, 0.25);
+    }
+
+    .segmented-btn:hover[aria-pressed="true"] {
+      color: white;
+      background: var(--accent-blue-hover);
     }
 
     .section-title {
@@ -330,18 +389,26 @@
       display: flex;
       gap: 0.75rem;
       margin-bottom: 1.5rem;
+      flex-wrap: wrap;
     }
 
     .mode-btn {
-      padding: 0.5rem 1.2rem;
+      padding: 0.6rem 1.4rem;
       border: 1.5px solid var(--border-color);
       background: var(--bg-secondary);
       color: var(--text-secondary);
-      border-radius: 40px;
+      border-radius: 60px;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 500;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mode-btn:hover {
+      border-color: var(--accent-green);
+      background: rgba(11, 143, 110, 0.1);
+      color: var(--accent-green);
     }
 
     .mode-btn.active {
@@ -349,6 +416,11 @@
       border-color: var(--accent-green);
       color: white;
       box-shadow: 0 2px 6px rgba(11, 143, 110, 0.25);
+    }
+
+    .mode-btn:hover.active {
+      color: white;
+      background: var(--accent-green);
     }
 
     .global-input-row {
@@ -509,7 +581,7 @@
       border: 1px solid var(--border-color);
       border-radius: 1rem;
       background:
-        radial-gradient(circle at top right, rgba(108, 71, 255, 0.08), transparent 40%),
+        radial-gradient(circle at top right, rgba(11, 143, 110, 0.08), transparent 40%),
         linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 55%),
         var(--bg-tertiary);
       overflow: hidden;
@@ -541,6 +613,7 @@
       display: flex;
       gap: 0.5rem;
       margin-bottom: 1.2rem;
+      flex-wrap: wrap;
     }
 
     .chart-tab {
@@ -550,14 +623,28 @@
       background: var(--bg-secondary);
       color: var(--text-secondary);
       font-size: 0.8rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chart-tab:hover {
+      border-color: var(--accent-blue);
+      background: rgba(11, 143, 110, 0.1);
+      color: var(--accent-blue);
     }
 
     .chart-tab.active {
       background: var(--accent-blue);
       border-color: var(--accent-blue);
       color: white;
+      box-shadow: 0 2px 6px rgba(11, 143, 110, 0.25);
+    }
+
+    .chart-tab:hover.active {
+      color: white;
+      background: var(--accent-blue-hover);
     }
 
     .table-wrap {
@@ -626,10 +713,20 @@
       font-weight: 500;
     }
 
+    .red {
+      color: var(--accent-red);
+      font-weight: 500;
+    }
+
     /* ensure metric box green stays bold */
     .metric .metric-value.green {
       font-weight: 700;
       color: var(--accent-green);
+    }
+
+    .metric .metric-value.negative {
+      font-weight: 700;
+      color: var(--accent-red);
     }
 
     .calculator.simple-mode .detailed-only {
@@ -655,7 +752,7 @@
 
     .compound-badge {
       display: inline-block;
-      background: rgba(108, 71, 255, 0.15);
+      background: rgba(11, 143, 110, 0.15);
       padding: 0.2rem 0.5rem;
       border-radius: 99px;
       font-size: 0.7rem;
@@ -667,7 +764,7 @@
       border-left: 4px solid var(--accent-blue);
       padding: 1rem 1.2rem;
       border-radius: 0.9rem;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       color: var(--text-secondary);
       line-height: 1.5;
       margin-top: 2rem;
@@ -677,13 +774,64 @@
       border-left-color: var(--accent-orange);
     }
 
-    footer {
-      text-align: center;
+    .note-info {
+      border-left-color: var(--accent-blue);
+    }
+
+    .note a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      border-bottom: 1px dashed currentColor;
+    }
+
+    .note a:hover {
+      color: var(--accent-blue-hover);
+    }
+
+    .page-notes {
+      display: grid;
+      gap: 1rem;
       margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border-color);
-      color: var(--text-tertiary);
-      font-size: 0.7rem;
+    }
+
+    .page-notes .note {
+      margin-top: 0;
+    }
+
+    .tax-note-copy {
+      margin-top: 0.75rem;
+    }
+
+    .tax-bracket-wrap {
+      margin-top: 0.9rem;
+      overflow-x: auto;
+    }
+
+    .tax-bracket-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.8rem;
+      overflow: hidden;
+    }
+
+    .tax-bracket-table th,
+    .tax-bracket-table td {
+      padding: 0.7rem 0.8rem;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .tax-bracket-table td:last-child {
+      color: var(--accent-red);
+      font-weight: 700;
+    }
+
+    .tax-bracket-table tr:last-child td {
+      background: transparent;
+      border-bottom: none;
     }
 
     @media (max-width: 768px) {
@@ -734,12 +882,9 @@
   <div class="container">
     <header>
       <div class="header-toolbar">
-        <div class="toolbar-group" role="group" aria-label="Modo de visualización">
-          <span class="toolbar-caption">Vista</span>
-          <div class="segmented-control">
-            <button type="button" class="segmented-btn active" id="view-simple" aria-pressed="true">Simple</button>
-            <button type="button" class="segmented-btn" id="view-detailed" aria-pressed="false">Detallada</button>
-          </div>
+        <div class="segmented-control" role="group" aria-label="Modo de visualización">
+          <button type="button" class="segmented-btn active" id="view-simple" aria-pressed="true">Simple</button>
+          <button type="button" class="segmented-btn" id="view-detailed" aria-pressed="false">Detallada</button>
         </div>
         <button type="button" class="toolbar-switch" id="themeToggle" aria-pressed="true">
           🌓 <span id="themeText">Modo claro</span>
@@ -749,7 +894,11 @@
         <span class="title-emoji">🏦</span>
         <span class="title-text">Calculadora de Intereses</span>
       </h1>
-      <p class="subtitle">España 2026 · Base Imponible del Ahorro</p>
+      <p class="subtitle">España 2026 · Intereses + Base Imponible del Ahorro</p>
+      <div class="repo-link">
+        <a href="https://github.com/JuanJesusAlejoSillero/calculadora-intereses" target="_blank"
+          rel="noreferrer noopener">📂 Repositorio del proyecto en GitHub</a>
+      </div>
     </header>
 
     <main>
@@ -829,7 +978,7 @@
           </div>
           <div class="metric">
             <div class="metric-label">Impuestos estimados</div>
-            <div class="metric-value" id="total-tax">—</div>
+            <div class="metric-value negative" id="total-tax">—</div>
           </div>
           <div class="metric">
             <div class="metric-label" id="total-net-label">Intereses netos</div>
@@ -876,16 +1025,31 @@
         </div>
       </div>
 
-      <aside class="note note-warning" id="tax-note">
-        <strong>⚠️ Importante:</strong> La estimación fiscal aplica la escala anual de la base del ahorro en España:
-        0-6.000 € (19%), 6.000-50.000 € (21%), 50.000-200.000 € (23%), 200.000-300.000 € (27%), &gt;300.000 € (30%). Los
-        resultados son orientativos y no constituyen asesoramiento financiero.
-      </aside>
-    </main>
+      <section class="page-notes" aria-label="Notas fiscales y legales">
+        <aside class="note note-info" id="tax-note">
+          <strong>ℹ️ Escala anual de la base del ahorro</strong>
+          <div class="tax-note-copy">La estimación fiscal se actualiza al cargar la calculadora.</div>
+        </aside>
 
-    <footer>
-      Calculadora de intereses mensual/anual · Interés simple o compuesto · Estimación fiscal ahorro España 2026
-    </footer>
+        <aside class="note note-warning">
+          <strong>⚠️ Descargo de responsabilidad:</strong> Los resultados son <strong>meramente orientativos</strong> y
+          <strong>no constituyen asesoramiento financiero ni fiscal</strong>. Esta herramienta no sustituye a un asesor
+          profesional. Comisiones, inflación, cambios normativos, productos exentos o particularidades personales pueden
+          alterar significativamente el resultado real. <strong>Consulta siempre con un profesional antes de tomar
+            decisiones económicas.</strong>
+        </aside>
+
+        <aside class="note note-info">
+          <strong>🧮 La herramienta aplica un modelo simplificado</strong>: no contempla inflación, comisiones,
+          retenciones bancarias reales ni fiscalidad especial de productos concretos. El repositorio es público, así que
+          puedes enviar mejoras mediante una <a
+            href="https://github.com/JuanJesusAlejoSillero/calculadora-intereses/pulls" target="_blank"
+            rel="noreferrer noopener">pull request</a> o dejar una <a
+            href="https://github.com/JuanJesusAlejoSillero/calculadora-intereses/issues" target="_blank"
+            rel="noreferrer noopener">issue</a> si detectas algún problema.
+        </aside>
+      </section>
+    </main>
   </div>
 
   <script>
@@ -1153,6 +1317,9 @@
       const unitPlural = periodMode === 'monthly' ? 'meses' : 'años';
       const selectedValue = values.includes(frequencyByMode[periodMode]) ? frequencyByMode[periodMode] : values[0];
       depositFrequencySelect.innerHTML = values.map((value) => {
+        if (value === 1) {
+          return `<option value="${value}">Cada ${periodMode === 'monthly' ? 'mes' : 'año'}</option>`;
+        }
         const unit = value === 1 ? unitSingular : unitPlural;
         return `<option value="${value}">Cada ${value} ${unit}</option>`;
       }).join('');
@@ -1227,13 +1394,35 @@
 
     function updateTaxNote() {
       if (taxEnabled) {
-        taxNoteEl.classList.add('note-warning');
-        taxNoteEl.innerHTML = '<strong>⚠️ Importante:</strong> La estimación fiscal aplica la escala anual de la base del ahorro en España: 0-6.000 € (19%), 6.000-50.000 € (21%), 50.000-200.000 € (23%), 200.000-300.000 € (27%), &gt;300.000 € (30%). Los resultados son orientativos y no constituyen asesoramiento financiero.';
+        taxNoteEl.classList.remove('note-warning');
+        taxNoteEl.classList.add('note-info');
+        taxNoteEl.innerHTML = `
+          <strong>ℹ️ Escala anual de la base del ahorro</strong>
+          <div class="tax-note-copy">La estimación fiscal aplica los tramos anuales de la base del ahorro en España y reinicia el acumulado al cambiar de ejercicio fiscal.</div>
+          <div class="tax-bracket-wrap">
+            <table class="tax-bracket-table" aria-label="Tramos de la base del ahorro en España 2026">
+              <thead>
+                <tr>
+                  <th>Tramo anual</th>
+                  <th>Tipo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>0 € - 6.000 €</td><td>19%</td></tr>
+                <tr><td>6.000 € - 50.000 €</td><td>21%</td></tr>
+                <tr><td>50.000 € - 200.000 €</td><td>23%</td></tr>
+                <tr><td>200.000 € - 300.000 €</td><td>27%</td></tr>
+                <tr><td>Más de 300.000 €</td><td>30%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `;
         return;
       }
 
       taxNoteEl.classList.remove('note-warning');
-      taxNoteEl.innerHTML = '<strong>ℹ️ Sin impuestos:</strong> La calculadora muestra la rentabilidad bruta sin aplicar carga fiscal. Úsalo para comparar escenarios antes de impuestos o productos exentos.';
+      taxNoteEl.classList.add('note-info');
+      taxNoteEl.innerHTML = '<strong>ℹ️ Sin impuestos:</strong><div class="tax-note-copy">La calculadora muestra la rentabilidad bruta sin aplicar carga fiscal. Úsalo para comparar escenarios antes de impuestos o productos exentos.</div>';
     }
 
     function getActiveChartTab() {
@@ -1325,6 +1514,7 @@
         groups[row.year].push(row);
       }
 
+      const taxCellClass = taxEnabled ? 'mono red' : 'mono';
       const years = Object.keys(groups).map((year) => parseInt(year, 10)).sort((left, right) => left - right);
       for (let yearIndex = 0; yearIndex < years.length; yearIndex++) {
         const year = years[yearIndex];
@@ -1345,9 +1535,9 @@
           const netAndAccum = `${fmt(row.net)} (${fmt(row.accumNet)})`;
           if (rowIndex === 0) {
             const yearCellClass = yearIndex !== years.length - 1 ? 'year-cell mono year-no-border' : 'year-cell mono';
-            tr.innerHTML = `<td class="${yearCellClass}" rowspan="${group.length + 1}">${year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="mono">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
+            tr.innerHTML = `<td class="${yearCellClass}" rowspan="${group.length + 1}">${year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
           } else {
-            tr.innerHTML = `<td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="mono">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
+            tr.innerHTML = `<td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
           }
           tableBodyEl.appendChild(tr);
         }
@@ -1357,7 +1547,7 @@
         const yearGrossAndAccum = `${fmt(yearTotals.gross)} (${fmt(group[group.length - 1].accumGross)})`;
         const yearNetAndAccum = `${fmt(yearTotals.net)} (${fmt(group[group.length - 1].accumNet)})`;
         yearTotalRow.className = yearIndex !== years.length - 1 ? 'subtotal-row no-border-bottom' : 'subtotal-row';
-        yearTotalRow.innerHTML = `<td>Total ${year}</td><td class="mono">${yearTotals.days}</td><td class="mono">—</td><td class="mono">${yearGrossAndAccum}</td><td class="mono">${yearEffectiveTax}</td><td class="mono green">${yearNetAndAccum}</td><td class="mono">${fmt(yearTotals.deposits)}</td>`;
+        yearTotalRow.innerHTML = `<td>Total ${year}</td><td class="mono">${yearTotals.days}</td><td class="mono">—</td><td class="mono">${yearGrossAndAccum}</td><td class="${taxCellClass}">${yearEffectiveTax}</td><td class="mono green">${yearNetAndAccum}</td><td class="mono">${fmt(yearTotals.deposits)}</td>`;
         tableBodyEl.appendChild(yearTotalRow);
 
         if (yearIndex !== years.length - 1) {
@@ -1372,15 +1562,16 @@
       const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
       const effectiveTax = totals.totalGross > 0 ? fmtPct(totals.totalTax / totals.totalGross * 100) : '—';
       totalRow.className = 'summary-row';
-      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="mono">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
+      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="${taxCellClass}">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
       tableBodyEl.appendChild(totalRow);
     }
 
     function renderAnnualTable(rows, totals) {
+      const taxCellClass = taxEnabled ? 'mono red' : 'mono';
       for (const row of rows) {
         const tr = document.createElement('tr');
         const taxRate = row.gross > 0 ? fmtPct(row.tax / row.gross * 100) : '—';
-        tr.innerHTML = `<td class="year-cell mono">${row.year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${fmt(row.gross)} (${fmt(row.accumGross)})</td><td class="mono">${taxRate}</td><td class="mono green">${fmt(row.net)} (${fmt(row.accumNet)})</td><td class="mono">${fmt(row.deposit)}</td>`;
+        tr.innerHTML = `<td class="year-cell mono">${row.year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${fmt(row.gross)} (${fmt(row.accumGross)})</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${fmt(row.net)} (${fmt(row.accumNet)})</td><td class="mono">${fmt(row.deposit)}</td>`;
         tableBodyEl.appendChild(tr);
       }
 
@@ -1388,7 +1579,7 @@
       const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
       const effectiveTax = totals.totalGross > 0 ? fmtPct(totals.totalTax / totals.totalGross * 100) : '—';
       totalRow.className = 'summary-row';
-      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="mono">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
+      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="${taxCellClass}">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
       tableBodyEl.appendChild(totalRow);
     }
 
