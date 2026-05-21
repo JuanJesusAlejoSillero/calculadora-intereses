@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Calculadora de Intereses · Ahorro + IRPF</title>
+  <script>
+    (function() {
+      const storageKey = 'theme';
+      const storedTheme = localStorage.getItem(storageKey);
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const resolvedTheme = storedTheme === 'light' || storedTheme === 'dark'
+        ? storedTheme
+        : (systemPrefersDark ? 'dark' : 'light');
+
+      document.documentElement.classList.toggle('dark-mode', resolvedTheme === 'dark');
+    })();
+  </script>
+  <style>
+    :root {
+      /* Light theme */
+      --bg-primary: #fcfaf7;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f3f1ec;
+      --border-color: #e6e3db;
+      --text-primary: #1f1e1b;
+      --text-secondary: #5c5a55;
+      --text-tertiary: #85827b;
+      --accent-blue: #6c47ff;
+      --accent-blue-hover: #8a6bff;
+      --accent-green: #0b8f6e;
+      --accent-red: #e35f5f;
+      --accent-orange: #ec8c49;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+      --shadow-lg: 0 12px 20px -8px rgba(0, 0, 0, 0.08);
+      --year-sep: rgba(0, 0, 0, 0.20);
+    }
+
+    html.dark-mode {
+      --bg-primary: #0a0c10;
+      --bg-secondary: #14171c;
+      --bg-tertiary: #1e2229;
+      --border-color: #2c313a;
+      --text-primary: #eceff4;
+      --text-secondary: #b3b9c5;
+      --text-tertiary: #8a8f99;
+      --accent-blue: #8a6bff;
+      --accent-blue-hover: #a07eff;
+      --accent-green: #3dd0c7;
+      --accent-red: #ff7d7d;
+      --accent-orange: #ffb976;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15);
+      --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 12px 20px -8px rgba(0, 0, 0, 0.4);
+      --year-sep: rgba(255, 255, 255, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      line-height: 1.5;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 2rem;
+      position: relative;
+    }
+
+    .header-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .toolbar-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.35rem 0.45rem 0.35rem 0.8rem;
+    }
+
+    .toolbar-caption {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .toolbar-switch {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 40px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      font-family: inherit;
+      color: inherit;
+    }
+
+    .toolbar-switch:hover {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .title-emoji {
+      background: none;
+      -webkit-text-fill-color: initial;
+      color: inherit;
+    }
+
+    .title-text {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #a07eff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .calculator {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 1.25rem;
+      padding: 1.8rem;
+      transition: all 0.25s ease;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2rem;
+    }
+
+    .calculator:hover {
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .field input, .field select {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(108, 71, 255, 0.15);
+    }
+
+    .toggle-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+      flex-wrap: wrap;
+    }
+
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.6rem 1.2rem;
+      border: 1.5px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border-radius: 60px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-btn .dot {
+      width: 28px;
+      height: 16px;
+      border-radius: 99px;
+      background: var(--border-color);
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn .dot::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      left: 3px;
+      transition: left 0.2s;
+    }
+
+    .toggle-btn.active {
+      border-color: var(--accent-green);
+      color: var(--text-primary);
+    }
+
+    .toggle-btn.active .dot {
+      background: var(--accent-green);
+    }
+
+    .toggle-btn.active .dot::after {
+      left: 15px;
+    }
+
+    .mode-strip {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .segmented-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      flex-wrap: wrap;
+    }
+
+    .segmented-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.45rem 0.95rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .segmented-btn.active {
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 4px 12px rgba(108, 71, 255, 0.18);
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 1rem;
+    }
+
+    .deposit-mode {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-btn {
+      padding: 0.5rem 1.2rem;
+      border: 1.5px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      color: white;
+      box-shadow: 0 2px 6px rgba(11, 143, 110, 0.25);
+    }
+
+    .global-input-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      background: var(--bg-tertiary);
+      padding: 0.8rem 1rem;
+      border-radius: 0.9rem;
+    }
+
+    .global-input-row label {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .global-input-row input {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      width: 160px;
+    }
+
+    .months-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .month-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 0.8rem 1rem;
+      transition: all 0.2s;
+    }
+
+    .month-card:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .month-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .month-card input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      background: transparent;
+      font-size: 0.9rem;
+      padding: 0.3rem 0;
+      color: var(--text-primary);
+    }
+
+    .month-card input:focus {
+      outline: none;
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .month-interest {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--accent-green);
+      margin-top: 0.6rem;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric {
+      background: var(--bg-tertiary);
+      border-radius: 1rem;
+      padding: 1.2rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .metric-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    .metric-value.green {
+      color: var(--accent-green);
+      font-weight: 700;
+    }
+
+    .chart-bar {
+      height: 10px;
+      border-radius: 12px;
+      display: flex;
+      overflow: hidden;
+      background: var(--bg-tertiary);
+      margin: 0.5rem 0 1rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .segment-net {
+      background: linear-gradient(90deg, var(--accent-green), #2bbd9e);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      background: var(--accent-green);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 280px;
+      margin: 1.5rem 0;
+    }
+
+    .chart-surface {
+      width: 100%;
+      height: 100%;
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      background:
+        radial-gradient(circle at top right, rgba(108, 71, 255, 0.08), transparent 40%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 55%),
+        var(--bg-tertiary);
+      overflow: hidden;
+    }
+
+    .chart-surface svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .chart-surface canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .chart-empty {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .chart-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .chart-tab {
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 40px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chart-tab.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.8rem 0.5rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 0.7rem 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+      font-weight: 600;
+      background: var(--bg-tertiary);
+    }
+
+    .subtotal-row td,
+    .summary-row td {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+    }
+
+    .mono {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .year-cell {
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .year-separator td {
+      border-bottom: 2px solid var(--year-sep);
+      padding: 0.25rem 0.5rem;
+      background: transparent;
+    }
+
+    .no-border-bottom td {
+      border-bottom: none;
+    }
+
+    .year-cell.year-no-border {
+      border-bottom: none;
+    }
+
+    .green {
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    /* ensure metric box green stays bold */
+    .metric .metric-value.green {
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .calculator.simple-mode .detailed-only {
+      display: none;
+    }
+
+    .calculator.simple-mode .month-interest {
+      display: none;
+    }
+
+    .calculator.simple-mode .chart-wrap {
+      margin-top: 1rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(11, 143, 110, 0.15);
+      padding: 0.2rem 0.5rem;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      margin-left: 0.5rem;
+    }
+
+    .compound-badge {
+      display: inline-block;
+      background: rgba(108, 71, 255, 0.15);
+      padding: 0.2rem 0.5rem;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      margin-left: 0.5rem;
+    }
+
+    .note {
+      background: var(--bg-tertiary);
+      border-left: 4px solid var(--accent-blue);
+      padding: 1rem 1.2rem;
+      border-radius: 0.9rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-top: 2rem;
+    }
+
+    .note-warning {
+      border-left-color: var(--accent-orange);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-tertiary);
+      font-size: 0.7rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .calculator {
+        padding: 1.2rem;
+      }
+
+      .metric-value {
+        font-size: 1.4rem;
+      }
+
+      .header-toolbar {
+        justify-content: flex-end;
+      }
+
+      .toolbar-group {
+        width: 100%;
+        justify-content: space-between;
+        border-radius: 1rem;
+      }
+
+      .mode-group {
+        width: 100%;
+      }
+
+      .segmented-control {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .segmented-btn {
+        flex: 1 1 auto;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="header-toolbar">
+        <div class="toolbar-group" role="group" aria-label="Modo de visualización">
+          <span class="toolbar-caption">Vista</span>
+          <div class="segmented-control">
+            <button type="button" class="segmented-btn active" id="view-simple" aria-pressed="true">Simple</button>
+            <button type="button" class="segmented-btn" id="view-detailed" aria-pressed="false">Detallada</button>
+          </div>
+        </div>
+        <button type="button" class="toolbar-switch" id="themeToggle" aria-pressed="true">
+          🌓 <span id="themeText">Modo claro</span>
+        </button>
+      </div>
+      <h1>
+        <span class="title-emoji">🏦</span>
+        <span class="title-text">Calculadora de Intereses</span>
+      </h1>
+      <p class="subtitle">España 2026 · Base Imponible del Ahorro</p>
+    </header>
+
+    <main>
+      <div class="calculator simple-mode">
+        <div class="mode-strip">
+          <div class="mode-group">
+            <span class="toolbar-caption">Cálculo</span>
+            <div class="segmented-control">
+              <button type="button" class="segmented-btn active" id="period-monthly"
+                aria-pressed="true">Mensual</button>
+              <button type="button" class="segmented-btn" id="period-annual" aria-pressed="false">Anual</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-grid">
+          <div class="field"><label>Saldo inicial (€)</label><input type="number" id="initial" value="36000" step="100">
+          </div>
+          <div class="field"><label>Interés anual (%)</label><input type="number" id="rate" value="3" step="0.1"
+              min="0"></div>
+          <div class="field" id="start-month-field"><label>Mes inicial</label><select id="start-month">
+              <option value="0">Enero</option>
+              <option value="1">Febrero</option>
+              <option value="2">Marzo</option>
+              <option value="3">Abril</option>
+              <option value="4">Mayo</option>
+              <option value="5">Junio</option>
+              <option value="6">Julio</option>
+              <option value="7">Agosto</option>
+              <option value="8">Septiembre</option>
+              <option value="9">Octubre</option>
+              <option value="10">Noviembre</option>
+              <option value="11">Diciembre</option>
+            </select></div>
+          <div class="field"><label>Año inicial</label><input type="number" id="start-year" value="2026" min="1900"
+              max="2100"></div>
+          <div class="field"><label id="count-label">Número de meses</label><input type="number" id="period-count"
+              value="12" min="1" max="240" step="1"></div>
+          <div class="field"><label id="deposit-frequency-label">Frecuencia de aportación (meses)</label>
+            <select id="deposit-frequency">
+              <option value="1" selected>Cada mes</option>
+              <option value="2">Cada 2 meses</option>
+              <option value="3">Cada 3 meses</option>
+              <option value="4">Cada 4 meses</option>
+              <option value="6">Cada 6 meses</option>
+              <option value="12">Cada 12 meses</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <button class="toggle-btn" id="compound-toggle" aria-pressed="true"><span class="dot"></span> Interés
+            compuesto</button>
+          <button class="toggle-btn" id="tax-toggle" aria-pressed="true"><span class="dot"></span> Calcular
+            impuestos</button>
+        </div>
+
+        <div class="section-title" id="contribution-title">APORTACIONES MENSUALES</div>
+        <div class="deposit-mode">
+          <button class="mode-btn active" id="btn-global">Mismo importe todos los meses</button>
+          <button class="mode-btn" id="btn-individual">Individual por mes</button>
+        </div>
+        <div id="global-row" class="global-input-row" style="display:flex;">
+          <label id="global-deposit-label">Aportación mensual (€)</label>
+          <input type="number" id="global-deposit" value="0" min="0" step="100">
+        </div>
+        <div class="months-grid" id="periods-grid"></div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">Saldo final acumulado</div>
+            <div class="metric-value" id="total-balance">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Intereses brutos</div>
+            <div class="metric-value" id="total-gross">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Impuestos estimados</div>
+            <div class="metric-value" id="total-tax">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label" id="total-net-label">Intereses netos</div>
+            <div class="metric-value green" id="total-net">—</div>
+          </div>
+        </div>
+
+        <div class="chart-bar">
+          <div class="segment-net" id="distribution-bar" style="width:0%"></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot"></span><span id="distribution-label">Interés neto sobre el
+              patrimonio final</span></div>
+        </div>
+
+        <div class="section-title">GRÁFICA</div>
+        <div class="chart-tabs detailed-only">
+          <button class="chart-tab active" id="tab-balance">Evolución del patrimonio</button>
+          <button class="chart-tab" id="tab-interest">Intereses mensuales</button>
+          <button class="chart-tab" id="tab-combined">Combinada</button>
+        </div>
+        <div class="chart-wrap">
+          <div id="main-chart" class="chart-surface" role="img" aria-live="polite"></div>
+        </div>
+        <div class="legend detailed-only" id="chart-legend"></div>
+
+        <div class="section-title detailed-only" id="detail-section-title">DETALLE MENSUAL</div>
+        <div class="table-wrap detailed-only">
+          <table>
+            <thead>
+              <tr>
+                <th>Ejercicio</th>
+                <th id="table-period-header">Mes</th>
+                <th>Días</th>
+                <th>Saldo base</th>
+                <th>Interés bruto (Σ por año)</th>
+                <th>Carga fiscal (%)</th>
+                <th>Interés neto (Σ total)</th>
+                <th>Aportación</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside class="note note-warning" id="tax-note">
+        <strong>⚠️ Importante:</strong> La estimación fiscal aplica la escala anual de la base del ahorro en España:
+        0-6.000 € (19%), 6.000-50.000 € (21%), 50.000-200.000 € (23%), 200.000-300.000 € (27%), &gt;300.000 € (30%). Los
+        resultados son orientativos y no constituyen asesoramiento financiero.
+      </aside>
+    </main>
+
+    <footer>
+      Calculadora de intereses mensual/anual · Interés simple o compuesto · Estimación fiscal ahorro España 2026
+    </footer>
+  </div>
+
+  <script>
+    const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const MONTHS_FULL = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const SAVINGS_BRACKETS = [
+      { limit: 6000, rate: 0.19 },
+      { limit: 50000, rate: 0.21 },
+      { limit: 200000, rate: 0.23 },
+      { limit: 300000, rate: 0.27 },
+      { limit: Infinity, rate: 0.30 }
+    ];
+    const FREQUENCY_OPTIONS = {
+      monthly: [1, 2, 3, 4, 6, 12],
+      annual: [1, 2, 3, 5, 10]
+    };
+    const PERIOD_CONFIG = {
+      monthly: {
+        countLabel: 'Número de meses',
+        countMax: 240,
+        frequencyLabel: 'Frecuencia aportación (meses)',
+        globalDepositLabel: 'Aportación mensual (€)',
+        globalModeLabel: 'Mismo importe todos los meses',
+        individualModeLabel: 'Individual por mes',
+        detailSectionTitle: 'DETALLE MENSUAL',
+        periodHeader: 'Mes',
+        interestTabLabel: 'Intereses mensuales'
+      },
+      annual: {
+        countLabel: 'Número de años',
+        countMax: 120,
+        frequencyLabel: 'Frecuencia aportación (años)',
+        globalDepositLabel: 'Aportación anual (€)',
+        globalModeLabel: 'Mismo importe todos los años',
+        individualModeLabel: 'Individual por año',
+        detailSectionTitle: 'DETALLE ANUAL',
+        periodHeader: 'Periodo',
+        interestTabLabel: 'Intereses anuales'
+      }
+    };
+
+    const calculatorEl = document.querySelector('.calculator');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeTextSpan = document.getElementById('themeText');
+    const viewSimpleBtn = document.getElementById('view-simple');
+    const viewDetailedBtn = document.getElementById('view-detailed');
+    const periodMonthlyBtn = document.getElementById('period-monthly');
+    const periodAnnualBtn = document.getElementById('period-annual');
+    const initialInput = document.getElementById('initial');
+    const rateInput = document.getElementById('rate');
+    const startMonthField = document.getElementById('start-month-field');
+    const startMonthSelect = document.getElementById('start-month');
+    const startYearInput = document.getElementById('start-year');
+    const periodCountInput = document.getElementById('period-count');
+    const countLabel = document.getElementById('count-label');
+    const depositFrequencySelect = document.getElementById('deposit-frequency');
+    const depositFrequencyLabel = document.getElementById('deposit-frequency-label');
+    const compoundToggle = document.getElementById('compound-toggle');
+    const taxToggle = document.getElementById('tax-toggle');
+    const contributionTitle = document.getElementById('contribution-title');
+    const btnGlobal = document.getElementById('btn-global');
+    const btnIndividual = document.getElementById('btn-individual');
+    const globalRow = document.getElementById('global-row');
+    const globalDepositLabel = document.getElementById('global-deposit-label');
+    const globalDepositInput = document.getElementById('global-deposit');
+    const periodsGrid = document.getElementById('periods-grid');
+    const totalBalanceEl = document.getElementById('total-balance');
+    const totalGrossEl = document.getElementById('total-gross');
+    const totalTaxEl = document.getElementById('total-tax');
+    const totalNetEl = document.getElementById('total-net');
+    const totalNetLabelEl = document.getElementById('total-net-label');
+    const distributionBarEl = document.getElementById('distribution-bar');
+    const distributionLabelEl = document.getElementById('distribution-label');
+    const tabBalanceEl = document.getElementById('tab-balance');
+    const tabInterestEl = document.getElementById('tab-interest');
+    const tabCombinedEl = document.getElementById('tab-combined');
+    const mainChartEl = document.getElementById('main-chart');
+    const chartLegendEl = document.getElementById('chart-legend');
+    const detailSectionTitleEl = document.getElementById('detail-section-title');
+    const tablePeriodHeaderEl = document.getElementById('table-period-header');
+    const tableBodyEl = document.getElementById('table-body');
+    const taxNoteEl = document.getElementById('tax-note');
+
+    const storageKey = 'theme';
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const chartJsUrl = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+
+    let periodMode = 'monthly';
+    let detailMode = 'simple';
+    let depositMode = 'global';
+    let compound = true;
+    let taxEnabled = true;
+    let chartTab = 'balance';
+    let chartJsAvailable = typeof window.Chart !== 'undefined';
+    let chartJsLoadingStarted = false;
+    let chartInstance = null;
+    let lastRows = [];
+    const depositsByMode = { monthly: [], annual: [] };
+    const frequencyByMode = { monthly: 1, annual: 1 };
+
+    function fmt(amount) {
+      return amount.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    }
+
+    function fmtPct(value) {
+      return value.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+    }
+
+    function escapeMarkup(text) {
+      return String(text).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function computeTax(amount) {
+      let tax = 0;
+      let previousLimit = 0;
+      for (const bracket of SAVINGS_BRACKETS) {
+        const taxable = Math.max(0, Math.min(amount, bracket.limit) - previousLimit);
+        tax += taxable * bracket.rate;
+        previousLimit = bracket.limit;
+        if (amount <= bracket.limit) break;
+      }
+      return tax;
+    }
+
+    function getDaysInMonth(year, monthIndex) {
+      return new Date(year, monthIndex + 1, 0).getDate();
+    }
+
+    function isLeapYear(year) {
+      return new Date(year, 1, 29).getDate() === 29;
+    }
+
+    function getDaysInYear(year) {
+      return isLeapYear(year) ? 366 : 365;
+    }
+
+    function withAlpha(color, alpha) {
+      const raw = color.trim().replace('#', '');
+      if (![3, 6].includes(raw.length)) return color;
+      const normalized = raw.length === 3 ? raw.split('').map((char) => char + char).join('') : raw;
+      const red = parseInt(normalized.slice(0, 2), 16);
+      const green = parseInt(normalized.slice(2, 4), 16);
+      const blue = parseInt(normalized.slice(4, 6), 16);
+      return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    }
+
+    function niceStep(value) {
+      if (value <= 0) return 1;
+      const exponent = Math.floor(Math.log10(value));
+      const fraction = value / (10 ** exponent);
+      let niceFraction = 1;
+      if (fraction <= 1) niceFraction = 1;
+      else if (fraction <= 2) niceFraction = 2;
+      else if (fraction <= 2.5) niceFraction = 2.5;
+      else if (fraction <= 5) niceFraction = 5;
+      else niceFraction = 10;
+      return niceFraction * (10 ** exponent);
+    }
+
+    function buildTicks(maxValue, desiredTickCount = 5) {
+      if (maxValue <= 0) return [0, 1];
+      const step = niceStep(maxValue / Math.max(1, desiredTickCount - 1));
+      const maxTick = Math.ceil(maxValue / step) * step;
+      const ticks = [];
+      for (let value = 0; value <= maxTick + step / 2; value += step) {
+        ticks.push(Number(value.toFixed(6)));
+      }
+      return ticks;
+    }
+
+    function formatAxisAmount(value) {
+      return value.toLocaleString('es-ES', { maximumFractionDigits: 0 }) + ' €';
+    }
+
+    function getChartPalette() {
+      const styles = getComputedStyle(document.documentElement);
+      const green = styles.getPropertyValue('--accent-green').trim();
+      const blue = styles.getPropertyValue('--accent-blue').trim();
+      const text = styles.getPropertyValue('--text-tertiary').trim();
+      const border = styles.getPropertyValue('--border-color').trim();
+      const grid = document.documentElement.classList.contains('dark-mode') ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+      return {
+        green,
+        blue,
+        text,
+        border,
+        grid,
+        grossFill: withAlpha(green, 0.18),
+        netFill: withAlpha(green, 0.72),
+        lineFill: withAlpha(green, 0.12),
+        blueFill: withAlpha(blue, 0.14)
+      };
+    }
+
+    function destroyChartInstance() {
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+      }
+    }
+
+    function ensureChartJs() {
+      if (chartJsAvailable || chartJsLoadingStarted) return;
+
+      chartJsLoadingStarted = true;
+      const script = document.createElement('script');
+      script.src = chartJsUrl;
+      script.async = true;
+      script.onload = () => {
+        chartJsAvailable = typeof window.Chart !== 'undefined';
+        if (lastRows.length) renderChart(lastRows);
+      };
+      script.onerror = () => {
+        chartJsAvailable = false;
+      };
+      document.head.appendChild(script);
+    }
+
+    function getPeriodCount() {
+      const config = PERIOD_CONFIG[periodMode];
+      const parsed = parseInt(periodCountInput.value, 10);
+      const safeValue = Number.isNaN(parsed) ? 1 : parsed;
+      return Math.max(1, Math.min(config.countMax, safeValue));
+    }
+
+    function getCurrentDeposits() {
+      return depositsByMode[periodMode];
+    }
+
+    function setPressedState(element, active) {
+      element.classList.toggle('active', active);
+      element.setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+
+    function syncStatefulControls() {
+      calculatorEl.classList.toggle('simple-mode', detailMode === 'simple');
+      setPressedState(viewSimpleBtn, detailMode === 'simple');
+      setPressedState(viewDetailedBtn, detailMode === 'detailed');
+      setPressedState(periodMonthlyBtn, periodMode === 'monthly');
+      setPressedState(periodAnnualBtn, periodMode === 'annual');
+      setPressedState(compoundToggle, compound);
+      setPressedState(taxToggle, taxEnabled);
+      setPressedState(btnGlobal, depositMode === 'global');
+      setPressedState(btnIndividual, depositMode === 'individual');
+      totalNetLabelEl.textContent = taxEnabled ? 'Intereses netos' : 'Intereses acumulados';
+      distributionLabelEl.textContent = taxEnabled ? 'Interés neto sobre el patrimonio final' : 'Interés acumulado sobre el patrimonio final';
+    }
+
+    function syncDepositModeUi() {
+      btnGlobal.classList.toggle('active', depositMode === 'global');
+      btnIndividual.classList.toggle('active', depositMode === 'individual');
+      globalRow.style.display = depositMode === 'global' ? 'flex' : 'none';
+      periodsGrid.style.display = depositMode === 'individual' ? 'grid' : 'none';
+    }
+
+    function syncFrequencyOptions() {
+      const values = FREQUENCY_OPTIONS[periodMode];
+      const unitSingular = periodMode === 'monthly' ? 'mes' : 'año';
+      const unitPlural = periodMode === 'monthly' ? 'meses' : 'años';
+      const selectedValue = values.includes(frequencyByMode[periodMode]) ? frequencyByMode[periodMode] : values[0];
+      depositFrequencySelect.innerHTML = values.map((value) => {
+        const unit = value === 1 ? unitSingular : unitPlural;
+        return `<option value="${value}">Cada ${value} ${unit}</option>`;
+      }).join('');
+      depositFrequencySelect.value = String(selectedValue);
+    }
+
+    function syncUiLabels() {
+      const config = PERIOD_CONFIG[periodMode];
+      countLabel.textContent = config.countLabel;
+      depositFrequencyLabel.textContent = config.frequencyLabel;
+      globalDepositLabel.textContent = config.globalDepositLabel;
+      contributionTitle.textContent = periodMode === 'monthly' ? 'APORTACIONES MENSUALES' : 'APORTACIONES ANUALES';
+      btnGlobal.textContent = config.globalModeLabel;
+      btnIndividual.textContent = config.individualModeLabel;
+      detailSectionTitleEl.textContent = config.detailSectionTitle;
+      tablePeriodHeaderEl.textContent = config.periodHeader;
+      tabInterestEl.textContent = config.interestTabLabel;
+      startMonthField.style.display = periodMode === 'monthly' ? '' : 'none';
+      periodCountInput.max = String(config.countMax);
+      periodCountInput.value = String(getPeriodCount());
+    }
+
+    function getPeriodInfo(index) {
+      const startYear = parseInt(startYearInput.value, 10) || new Date().getFullYear();
+      if (periodMode === 'annual') {
+        const year = startYear + index;
+        const days = getDaysInYear(year);
+        return {
+          year,
+          days,
+          daysInYear: days,
+          axisLabel: String(year),
+          cardLabel: `Año ${year}`,
+          tablePeriodLabel: 'Año completo',
+          taxYear: year
+        };
+      }
+
+      const startMonth = parseInt(startMonthSelect.value, 10) || 0;
+      const absoluteMonth = startMonth + index;
+      const monthIndex = absoluteMonth % 12;
+      const year = startYear + Math.floor(absoluteMonth / 12);
+      const days = getDaysInMonth(year, monthIndex);
+      return {
+        year,
+        days,
+        daysInYear: getDaysInYear(year),
+        axisLabel: `${MONTHS_ES[monthIndex]} ${String(year).slice(-2)}`,
+        cardLabel: `${MONTHS_FULL[monthIndex]} ${year}`,
+        tablePeriodLabel: MONTHS_FULL[monthIndex],
+        taxYear: year
+      };
+    }
+
+    function applyTheme(theme, persist = true) {
+      document.documentElement.classList.toggle('dark-mode', theme === 'dark');
+      if (theme === 'dark') {
+        themeTextSpan.innerText = 'Modo claro';
+        themeToggle.setAttribute('aria-pressed', 'true');
+      } else {
+        themeTextSpan.innerText = 'Modo oscuro';
+        themeToggle.setAttribute('aria-pressed', 'false');
+      }
+      if (persist) localStorage.setItem(storageKey, theme);
+    }
+
+    function resolveTheme() {
+      const saved = localStorage.getItem(storageKey);
+      if (saved === 'light' || saved === 'dark') return saved;
+      return systemPrefersDark.matches ? 'dark' : 'light';
+    }
+
+    function updateTaxNote() {
+      if (taxEnabled) {
+        taxNoteEl.classList.add('note-warning');
+        taxNoteEl.innerHTML = '<strong>⚠️ Importante:</strong> La estimación fiscal aplica la escala anual de la base del ahorro en España: 0-6.000 € (19%), 6.000-50.000 € (21%), 50.000-200.000 € (23%), 200.000-300.000 € (27%), &gt;300.000 € (30%). Los resultados son orientativos y no constituyen asesoramiento financiero.';
+        return;
+      }
+
+      taxNoteEl.classList.remove('note-warning');
+      taxNoteEl.innerHTML = '<strong>ℹ️ Sin impuestos:</strong> La calculadora muestra la rentabilidad bruta sin aplicar carga fiscal. Úsalo para comparar escenarios antes de impuestos o productos exentos.';
+    }
+
+    function getActiveChartTab() {
+      return detailMode === 'simple' ? 'balance' : chartTab;
+    }
+
+    function syncChartTabs() {
+      setPressedState(tabBalanceEl, chartTab === 'balance');
+      setPressedState(tabInterestEl, chartTab === 'interest');
+      setPressedState(tabCombinedEl, chartTab === 'combined');
+    }
+
+    function setDetailMode(mode) {
+      detailMode = mode;
+      syncStatefulControls();
+      renderChart(lastRows);
+    }
+
+    function setPeriodMode(mode) {
+      frequencyByMode[periodMode] = parseInt(depositFrequencySelect.value, 10) || 1;
+      periodMode = mode;
+      syncUiLabels();
+      syncFrequencyOptions();
+      syncStatefulControls();
+      buildGrid();
+    }
+
+    function setDepositMode(mode) {
+      depositMode = mode;
+      syncStatefulControls();
+      syncDepositModeUi();
+      calculate();
+    }
+
+    function toggleCompound() {
+      compound = !compound;
+      syncStatefulControls();
+      calculate();
+    }
+
+    function toggleTax() {
+      taxEnabled = !taxEnabled;
+      syncStatefulControls();
+      calculate();
+    }
+
+    function setChartTab(tab) {
+      chartTab = tab;
+      syncChartTabs();
+      renderChart(lastRows);
+    }
+
+    function buildGrid() {
+      syncUiLabels();
+      syncStatefulControls();
+      syncDepositModeUi();
+
+      const count = getPeriodCount();
+      const deposits = getCurrentDeposits();
+      deposits.length = count;
+      for (let index = 0; index < count; index++) {
+        if (typeof deposits[index] !== 'number') deposits[index] = 0;
+      }
+
+      periodsGrid.innerHTML = '';
+      for (let index = 0; index < count; index++) {
+        const info = getPeriodInfo(index);
+        const card = document.createElement('div');
+        card.className = 'month-card';
+        card.innerHTML = `
+        <div class="month-label">${info.cardLabel} <span>${info.days} días</span></div>
+        <input type="number" min="0" step="100" value="${deposits[index] || 0}" data-idx="${index}" placeholder="0">
+        <div class="month-interest" id="pi-${index}">—</div>
+      `;
+        periodsGrid.appendChild(card);
+        card.querySelector('input').addEventListener('input', (event) => {
+          deposits[index] = parseFloat(event.target.value) || 0;
+          calculate();
+        });
+      }
+
+      calculate();
+    }
+
+    function renderMonthlyTable(rows, totals) {
+      const groups = {};
+      for (const row of rows) {
+        if (!groups[row.year]) groups[row.year] = [];
+        groups[row.year].push(row);
+      }
+
+      const years = Object.keys(groups).map((year) => parseInt(year, 10)).sort((left, right) => left - right);
+      for (let yearIndex = 0; yearIndex < years.length; yearIndex++) {
+        const year = years[yearIndex];
+        const group = groups[year];
+        const yearTotals = group.reduce((accumulator, row) => {
+          accumulator.days += row.days;
+          accumulator.gross += row.gross;
+          accumulator.tax += row.tax;
+          accumulator.net += row.net;
+          accumulator.deposits += row.deposit;
+          return accumulator;
+        }, { days: 0, gross: 0, tax: 0, net: 0, deposits: 0 });
+        for (let rowIndex = 0; rowIndex < group.length; rowIndex++) {
+          const row = group[rowIndex];
+          const tr = document.createElement('tr');
+          const taxRate = row.gross > 0 ? fmtPct(row.tax / row.gross * 100) : '—';
+          const grossAndAccum = `${fmt(row.gross)} (${fmt(row.accumGross)})`;
+          const netAndAccum = `${fmt(row.net)} (${fmt(row.accumNet)})`;
+          if (rowIndex === 0) {
+            const yearCellClass = yearIndex !== years.length - 1 ? 'year-cell mono year-no-border' : 'year-cell mono';
+            tr.innerHTML = `<td class="${yearCellClass}" rowspan="${group.length + 1}">${year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="mono">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
+          } else {
+            tr.innerHTML = `<td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="mono">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
+          }
+          tableBodyEl.appendChild(tr);
+        }
+
+        const yearTotalRow = document.createElement('tr');
+        const yearEffectiveTax = yearTotals.gross > 0 ? fmtPct(yearTotals.tax / yearTotals.gross * 100) : '—';
+        const yearGrossAndAccum = `${fmt(yearTotals.gross)} (${fmt(group[group.length - 1].accumGross)})`;
+        const yearNetAndAccum = `${fmt(yearTotals.net)} (${fmt(group[group.length - 1].accumNet)})`;
+        yearTotalRow.className = yearIndex !== years.length - 1 ? 'subtotal-row no-border-bottom' : 'subtotal-row';
+        yearTotalRow.innerHTML = `<td>Total ${year}</td><td class="mono">${yearTotals.days}</td><td class="mono">—</td><td class="mono">${yearGrossAndAccum}</td><td class="mono">${yearEffectiveTax}</td><td class="mono green">${yearNetAndAccum}</td><td class="mono">${fmt(yearTotals.deposits)}</td>`;
+        tableBodyEl.appendChild(yearTotalRow);
+
+        if (yearIndex !== years.length - 1) {
+          const separator = document.createElement('tr');
+          separator.className = 'year-separator';
+          separator.innerHTML = '<td colspan="8" aria-hidden="true"></td>';
+          tableBodyEl.appendChild(separator);
+        }
+      }
+
+      const totalRow = document.createElement('tr');
+      const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
+      const effectiveTax = totals.totalGross > 0 ? fmtPct(totals.totalTax / totals.totalGross * 100) : '—';
+      totalRow.className = 'summary-row';
+      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="mono">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
+      tableBodyEl.appendChild(totalRow);
+    }
+
+    function renderAnnualTable(rows, totals) {
+      for (const row of rows) {
+        const tr = document.createElement('tr');
+        const taxRate = row.gross > 0 ? fmtPct(row.tax / row.gross * 100) : '—';
+        tr.innerHTML = `<td class="year-cell mono">${row.year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${fmt(row.gross)} (${fmt(row.accumGross)})</td><td class="mono">${taxRate}</td><td class="mono green">${fmt(row.net)} (${fmt(row.accumNet)})</td><td class="mono">${fmt(row.deposit)}</td>`;
+        tableBodyEl.appendChild(tr);
+      }
+
+      const totalRow = document.createElement('tr');
+      const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
+      const effectiveTax = totals.totalGross > 0 ? fmtPct(totals.totalTax / totals.totalGross * 100) : '—';
+      totalRow.className = 'summary-row';
+      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="mono">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
+      tableBodyEl.appendChild(totalRow);
+    }
+
+    function renderTable(rows, totals) {
+      tableBodyEl.innerHTML = '';
+      if (!rows.length) return;
+      if (periodMode === 'monthly') {
+        renderMonthlyTable(rows, totals);
+        return;
+      }
+      renderAnnualTable(rows, totals);
+    }
+
+    function buildPlotGeometry(count, dimensions) {
+      const plotWidth = dimensions.width - dimensions.marginLeft - dimensions.marginRight;
+      const slotWidth = plotWidth / Math.max(count, 1);
+      const centers = Array.from({ length: count }, (_, index) => dimensions.marginLeft + slotWidth * index + slotWidth / 2);
+      return {
+        plotWidth,
+        slotWidth,
+        centers,
+        plotRight: dimensions.width - dimensions.marginRight,
+        plotBottom: dimensions.height - dimensions.marginBottom
+      };
+    }
+
+    function scaleValue(value, maxValue, dimensions) {
+      const plotHeight = dimensions.height - dimensions.marginTop - dimensions.marginBottom;
+      const safeMax = maxValue > 0 ? maxValue : 1;
+      return dimensions.height - dimensions.marginBottom - (value / safeMax) * plotHeight;
+    }
+
+    function buildLinePath(points) {
+      if (!points.length) return '';
+      return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+    }
+
+    function buildAreaPath(points, baseY) {
+      if (!points.length) return '';
+      const linePath = buildLinePath(points);
+      const firstPoint = points[0];
+      const lastPoint = points[points.length - 1];
+      return `${linePath} L ${lastPoint.x.toFixed(2)} ${baseY.toFixed(2)} L ${firstPoint.x.toFixed(2)} ${baseY.toFixed(2)} Z`;
+    }
+
+    function renderYAxis(ticks, maxValue, dimensions, palette, side = 'left', includeGrid = true) {
+      const plotRight = dimensions.width - dimensions.marginRight;
+      return ticks.map((tick) => {
+        const y = scaleValue(tick, maxValue, dimensions);
+        const labelX = side === 'left' ? dimensions.marginLeft - 12 : plotRight + 12;
+        const anchor = side === 'left' ? 'end' : 'start';
+        const gridLine = includeGrid ? `<line x1="${dimensions.marginLeft}" y1="${y.toFixed(2)}" x2="${plotRight}" y2="${y.toFixed(2)}" stroke="${palette.grid}" stroke-width="1" />` : '';
+        return `${gridLine}<text x="${labelX}" y="${(y + 4).toFixed(2)}" fill="${palette.text}" font-size="11" text-anchor="${anchor}">${escapeMarkup(formatAxisAmount(tick))}</text>`;
+      }).join('');
+    }
+
+    function renderXAxisLabels(rows, centers, dimensions, palette) {
+      const step = rows.length <= 8 ? 1 : Math.ceil(rows.length / 8);
+      return rows.map((row, index) => {
+        if (index % step !== 0 && index !== rows.length - 1) return '';
+        return `<text x="${centers[index].toFixed(2)}" y="${(dimensions.height - 16).toFixed(2)}" fill="${palette.text}" font-size="11" text-anchor="middle">${escapeMarkup(row.axisLabel)}</text>`;
+      }).join('');
+    }
+
+    function renderLegend(tab, palette) {
+      const interestLabel = taxEnabled ? 'Interés neto acumulado' : 'Interés acumulado';
+      const items = tab === 'balance'
+        ? [{ label: 'Patrimonio total', color: palette.green }]
+        : tab === 'interest'
+          ? [{ label: 'Interés bruto', color: palette.grossFill }, { label: interestLabel, color: palette.netFill }]
+          : [{ label: 'Capital base', color: palette.blueFill }, { label: interestLabel, color: palette.netFill }];
+
+      chartLegendEl.innerHTML = items.map((item) => `
+      <div class="legend-item">
+        <span class="legend-dot" style="background:${item.color}"></span>${escapeMarkup(item.label)}
+      </div>
+    `).join('');
+    }
+
+    function renderBalanceChart(rows, palette, dimensions) {
+      const geometry = buildPlotGeometry(rows.length, dimensions);
+      const ticks = buildTicks(Math.max(...rows.map((row) => row.totalAssets), 1));
+      const maxValue = ticks[ticks.length - 1];
+      const points = geometry.centers.map((center, index) => ({ x: center, y: scaleValue(rows[index].totalAssets, maxValue, dimensions) }));
+      const circles = rows.length <= 36
+        ? points.map((point) => `<circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="3" fill="${palette.green}" />`).join('')
+        : '';
+
+      return `
+      ${renderYAxis(ticks, maxValue, dimensions, palette, 'left', true)}
+      <line x1="${dimensions.marginLeft}" y1="${geometry.plotBottom}" x2="${geometry.plotRight}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
+      <line x1="${dimensions.marginLeft}" y1="${dimensions.marginTop}" x2="${dimensions.marginLeft}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
+      <path d="${buildAreaPath(points, geometry.plotBottom)}" fill="${palette.lineFill}" />
+      <path d="${buildLinePath(points)}" fill="none" stroke="${palette.green}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
+      ${circles}
+      ${renderXAxisLabels(rows, geometry.centers, dimensions, palette)}
+    `;
+    }
+
+    function renderInterestChart(rows, palette, dimensions) {
+      const geometry = buildPlotGeometry(rows.length, dimensions);
+      const ticks = buildTicks(Math.max(...rows.map((row) => Math.max(row.gross, row.net)), 1));
+      const maxValue = ticks[ticks.length - 1];
+      const groupInset = Math.min(1.5, geometry.slotWidth * 0.02);
+      const groupWidth = Math.max(2, geometry.slotWidth - groupInset * 2);
+      const barWidth = Math.max(1, groupWidth / 2);
+      const bars = rows.map((row, index) => {
+        const grossY = scaleValue(row.gross, maxValue, dimensions);
+        const netY = scaleValue(row.net, maxValue, dimensions);
+        const grossX = geometry.centers[index] - groupWidth / 2;
+        const netX = grossX + barWidth;
+        return `
+        <rect x="${grossX.toFixed(2)}" y="${grossY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${Math.max(0, geometry.plotBottom - grossY).toFixed(2)}" rx="4" fill="${palette.grossFill}" stroke="${palette.green}" stroke-width="1" />
+        <rect x="${netX.toFixed(2)}" y="${netY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${Math.max(0, geometry.plotBottom - netY).toFixed(2)}" rx="4" fill="${palette.netFill}" stroke="${palette.green}" stroke-width="1" />
+      `;
+      }).join('');
+
+      return `
+      ${renderYAxis(ticks, maxValue, dimensions, palette, 'left', true)}
+      <line x1="${dimensions.marginLeft}" y1="${geometry.plotBottom}" x2="${geometry.plotRight}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
+      <line x1="${dimensions.marginLeft}" y1="${dimensions.marginTop}" x2="${dimensions.marginLeft}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
+      ${bars}
+      ${renderXAxisLabels(rows, geometry.centers, dimensions, palette)}
+    `;
+    }
+
+    function renderCombinedChart(rows, palette, dimensions) {
+      const geometry = buildPlotGeometry(rows.length, dimensions);
+      const ticks = buildTicks(Math.max(...rows.map((row) => row.totalAssets), 1));
+      const maxValue = ticks[ticks.length - 1];
+      const groupInset = Math.min(1.5, geometry.slotWidth * 0.02);
+      const barWidth = Math.max(2, geometry.slotWidth - groupInset * 2);
+      const bars = rows.map((row, index) => {
+        const totalY = scaleValue(row.totalAssets, maxValue, dimensions);
+        const baseY = scaleValue(row.baseCapital, maxValue, dimensions);
+        const barX = geometry.centers[index] - barWidth / 2;
+        const totalHeight = Math.max(0, geometry.plotBottom - totalY);
+        const baseHeight = Math.max(0, geometry.plotBottom - baseY);
+        const interestHeight = Math.max(0, baseY - totalY);
+        const baseRect = `<rect x="${barX.toFixed(2)}" y="${baseY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${baseHeight.toFixed(2)}" rx="0" fill="${palette.blueFill}" stroke="${palette.blue}" stroke-width="1" />`;
+        const interestRect = interestHeight > 0
+          ? `<rect x="${barX.toFixed(2)}" y="${totalY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${interestHeight.toFixed(2)}" rx="4" fill="${palette.netFill}" stroke="${palette.green}" stroke-width="1" />`
+          : '';
+        const clipTop = totalHeight > 0 ? `<rect x="${barX.toFixed(2)}" y="${totalY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${totalHeight.toFixed(2)}" rx="4" fill="none" stroke="${palette.border}" stroke-width="0" />` : '';
+        return `${baseRect}${interestRect}${clipTop}`;
+      }).join('');
+
+      return `
+      ${renderYAxis(ticks, maxValue, dimensions, palette, 'left', true)}
+      <line x1="${dimensions.marginLeft}" y1="${geometry.plotBottom}" x2="${geometry.plotRight}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
+      <line x1="${dimensions.marginLeft}" y1="${dimensions.marginTop}" x2="${dimensions.marginLeft}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
+      ${bars}
+      ${renderXAxisLabels(rows, geometry.centers, dimensions, palette)}
+    `;
+    }
+
+    function renderChartJs(rows, activeTab, palette) {
+      destroyChartInstance();
+
+      mainChartEl.innerHTML = '<canvas aria-hidden="true"></canvas>';
+      const canvas = mainChartEl.querySelector('canvas');
+      const context = canvas.getContext('2d');
+      const labels = rows.map((row) => row.axisLabel);
+      const sharedOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: document.documentElement.classList.contains('dark-mode') ? 'rgba(20, 23, 28, 0.96)' : 'rgba(31, 30, 27, 0.94)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            padding: 12,
+            displayColors: true,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: palette.grid, drawBorder: false },
+            ticks: { color: palette.text, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
+          },
+          y: {
+            grid: { color: palette.grid, drawBorder: false },
+            ticks: {
+              color: palette.text,
+              callback: (value) => formatAxisAmount(value)
+            }
+          }
+        }
+      };
+
+      const balanceGradient = context.createLinearGradient(0, 0, 0, canvas.height || 320);
+      balanceGradient.addColorStop(0, withAlpha(palette.green, 0.28));
+      balanceGradient.addColorStop(1, withAlpha(palette.green, 0.02));
+      const blueGradient = context.createLinearGradient(0, 0, 0, canvas.height || 320);
+      blueGradient.addColorStop(0, withAlpha(palette.blue, 0.26));
+      blueGradient.addColorStop(1, withAlpha(palette.blue, 0.03));
+
+      let config;
+      if (activeTab === 'balance') {
+        config = {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Patrimonio total',
+              data: rows.map((row) => Number(row.totalAssets.toFixed(2))),
+              borderColor: palette.green,
+              backgroundColor: balanceGradient,
+              pointBackgroundColor: palette.green,
+              pointRadius: rows.length > 36 ? 0 : 3,
+              pointHoverRadius: 5,
+              borderWidth: 3,
+              fill: true,
+              tension: 0.34
+            }]
+          },
+          options: sharedOptions
+        };
+      } else if (activeTab === 'interest') {
+        config = {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Interés bruto',
+              data: rows.map((row) => Number(row.gross.toFixed(2))),
+              backgroundColor: palette.grossFill,
+              borderColor: palette.green,
+              borderWidth: 1,
+              borderRadius: 8,
+              maxBarThickness: 40,
+              categoryPercentage: 1,
+              barPercentage: 1
+            }, {
+              label: 'Interés neto',
+              data: rows.map((row) => Number(row.net.toFixed(2))),
+              backgroundColor: palette.netFill,
+              borderColor: palette.green,
+              borderWidth: 1,
+              borderRadius: 8,
+              maxBarThickness: 40,
+              categoryPercentage: 1,
+              barPercentage: 1
+            }]
+          },
+          options: sharedOptions
+        };
+      } else {
+        config = {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Capital base',
+              data: rows.map((row) => Number(row.baseCapital.toFixed(2))),
+              backgroundColor: palette.blueFill,
+              borderColor: palette.blue,
+              borderWidth: 1,
+              borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 8, bottomRight: 8 },
+              borderSkipped: false,
+              maxBarThickness: 44,
+              categoryPercentage: 1,
+              barPercentage: 1,
+              stack: 'assets'
+            }, {
+              label: taxEnabled ? 'Interés neto acumulado' : 'Interés acumulado',
+              data: rows.map((row) => Number(row.interestComponent.toFixed(2))),
+              backgroundColor: palette.netFill,
+              borderColor: palette.green,
+              borderWidth: 1,
+              borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
+              borderSkipped: false,
+              maxBarThickness: 44,
+              categoryPercentage: 1,
+              barPercentage: 1,
+              stack: 'assets'
+            }]
+          },
+          options: {
+            ...sharedOptions,
+            scales: {
+              ...sharedOptions.scales,
+              x: {
+                ...sharedOptions.scales.x,
+                stacked: true
+              },
+              y: {
+                ...sharedOptions.scales.y,
+                stacked: true
+              }
+            }
+          }
+        };
+      }
+
+      chartInstance = new window.Chart(context, config);
+      mainChartEl.setAttribute('aria-label', `${activeTab === 'balance' ? 'Evolución del patrimonio' : activeTab === 'interest' ? 'Intereses por periodo' : 'Vista combinada'} con ${rows.length} periodos`);
+      renderLegend(activeTab, palette);
+    }
+
+    function renderSvgFallback(rows, activeTab, palette) {
+      destroyChartInstance();
+
+      const dimensions = {
+        width: 960,
+        height: 320,
+        marginTop: 24,
+        marginRight: activeTab === 'combined' ? 74 : 24,
+        marginBottom: 52,
+        marginLeft: 72
+      };
+
+      let chartMarkup = '';
+      if (activeTab === 'balance') chartMarkup = renderBalanceChart(rows, palette, dimensions);
+      else if (activeTab === 'interest') chartMarkup = renderInterestChart(rows, palette, dimensions);
+      else chartMarkup = renderCombinedChart(rows, palette, dimensions);
+
+      mainChartEl.innerHTML = `
+      <svg viewBox="0 0 ${dimensions.width} ${dimensions.height}" preserveAspectRatio="none" aria-hidden="true">
+        ${chartMarkup}
+      </svg>
+    `;
+      mainChartEl.setAttribute('aria-label', `${activeTab === 'balance' ? 'Evolución del patrimonio' : activeTab === 'interest' ? 'Intereses por periodo' : 'Vista combinada'} con ${rows.length} periodos`);
+      renderLegend(activeTab, palette);
+    }
+
+    function renderChart(rows) {
+      const activeTab = getActiveChartTab();
+      const palette = getChartPalette();
+      if (!rows.length) {
+        destroyChartInstance();
+        mainChartEl.innerHTML = '<div class="chart-empty">Ajusta algún parámetro para ver la gráfica.</div>';
+        chartLegendEl.innerHTML = '';
+        mainChartEl.setAttribute('aria-label', 'Gráfica sin datos');
+        return;
+      }
+
+      if (chartJsAvailable && window.Chart) {
+        renderChartJs(rows, activeTab, palette);
+        return;
+      }
+
+      renderSvgFallback(rows, activeTab, palette);
+    }
+
+    function calculate() {
+      const initial = parseFloat(initialInput.value) || 0;
+      const rate = (parseFloat(rateInput.value) || 0) / 100;
+      const periodCount = getPeriodCount();
+      const depositFrequency = parseInt(depositFrequencySelect.value, 10) || 1;
+      const globalDeposit = parseFloat(globalDepositInput.value) || 0;
+      const deposits = getCurrentDeposits();
+
+      let principalBalance = initial;
+      let liquidInterestBalance = 0;
+      let totalGross = 0;
+      let totalNet = 0;
+      let totalDeposits = 0;
+      let totalTax = 0;
+      let cumulativeGrossByYear = 0;
+      let cumulativeNet = 0;
+      let currentTaxYear = null;
+      let taxableGrossForYear = 0;
+      const rows = [];
+
+      for (let index = 0; index < periodCount; index++) {
+        const info = getPeriodInfo(index);
+        if (currentTaxYear !== info.taxYear) {
+          currentTaxYear = info.taxYear;
+          taxableGrossForYear = 0;
+          cumulativeGrossByYear = 0;
+        }
+
+        const openingPrincipal = principalBalance;
+        const gross = openingPrincipal / info.daysInYear * rate * info.days;
+        const tax = taxEnabled ? computeTax(taxableGrossForYear + gross) - computeTax(taxableGrossForYear) : 0;
+        const net = gross - tax;
+        const appliesDeposit = index % depositFrequency === 0;
+        const deposit = appliesDeposit ? (depositMode === 'global' ? globalDeposit : (deposits[index] || 0)) : 0;
+
+        totalGross += gross;
+        totalNet += net;
+        totalDeposits += deposit;
+        totalTax += tax;
+
+        principalBalance = openingPrincipal + deposit + (compound ? net : 0);
+        if (!compound) liquidInterestBalance += net;
+        cumulativeGrossByYear += gross;
+        cumulativeNet += net;
+        taxableGrossForYear += gross;
+
+        const totalAssets = principalBalance + liquidInterestBalance;
+        const baseCapital = initial + totalDeposits;
+        const interestComponent = Math.max(0, totalAssets - baseCapital);
+        rows.push({
+          year: info.year,
+          periodLabel: info.tablePeriodLabel,
+          axisLabel: info.axisLabel,
+          days: info.days,
+          openingPrincipal,
+          gross,
+          tax,
+          net,
+          deposit,
+          baseCapital,
+          interestComponent,
+          totalAssets,
+          accumGross: cumulativeGrossByYear,
+          accumNet: cumulativeNet
+        });
+
+        const interestCell = document.getElementById(`pi-${index}`);
+        if (interestCell) interestCell.textContent = '+' + net.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+      }
+
+      lastRows = rows;
+      const endingAssets = principalBalance + liquidInterestBalance;
+      const netShare = endingAssets > 0 ? Math.min(100, totalNet / endingAssets * 100) : 0;
+
+      totalBalanceEl.textContent = fmt(endingAssets);
+      totalGrossEl.textContent = fmt(totalGross);
+      totalTaxEl.textContent = fmt(totalTax);
+      totalNetEl.textContent = fmt(totalNet);
+      distributionBarEl.style.width = netShare + '%';
+
+      renderTable(rows, { totalGross, totalNet, totalTax, totalDeposits });
+      updateTaxNote();
+      renderChart(rows);
+    }
+
+    initialInput.addEventListener('input', calculate);
+    rateInput.addEventListener('input', calculate);
+    periodCountInput.addEventListener('input', buildGrid);
+    startMonthSelect.addEventListener('change', buildGrid);
+    startYearInput.addEventListener('input', buildGrid);
+    depositFrequencySelect.addEventListener('change', () => {
+      frequencyByMode[periodMode] = parseInt(depositFrequencySelect.value, 10) || 1;
+      calculate();
+    });
+    compoundToggle.addEventListener('click', toggleCompound);
+    taxToggle.addEventListener('click', toggleTax);
+    btnGlobal.addEventListener('click', () => setDepositMode('global'));
+    btnIndividual.addEventListener('click', () => setDepositMode('individual'));
+    globalDepositInput.addEventListener('input', calculate);
+    viewSimpleBtn.addEventListener('click', () => setDetailMode('simple'));
+    viewDetailedBtn.addEventListener('click', () => setDetailMode('detailed'));
+    periodMonthlyBtn.addEventListener('click', () => setPeriodMode('monthly'));
+    periodAnnualBtn.addEventListener('click', () => setPeriodMode('annual'));
+    tabBalanceEl.addEventListener('click', () => setChartTab('balance'));
+    tabInterestEl.addEventListener('click', () => setChartTab('interest'));
+    tabCombinedEl.addEventListener('click', () => setChartTab('combined'));
+
+    applyTheme(resolveTheme(), false);
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.contains('dark-mode');
+      applyTheme(isDark ? 'light' : 'dark');
+      if (lastRows.length) renderChart(lastRows);
+    });
+    systemPrefersDark.addEventListener('change', (event) => {
+      if (!localStorage.getItem(storageKey)) {
+        applyTheme(event.matches ? 'dark' : 'light', false);
+        if (lastRows.length) renderChart(lastRows);
+      }
+    });
+
+    if (!startYearInput.value || parseInt(startYearInput.value, 10) < 1900) {
+      startYearInput.value = String(new Date().getFullYear());
+    }
+    startMonthSelect.value = String(new Date().getMonth());
+    syncUiLabels();
+    syncFrequencyOptions();
+    syncStatefulControls();
+    syncDepositModeUi();
+    syncChartTabs();
+    ensureChartJs();
+    buildGrid();
+  </script>
+</body>
+
+</html>
