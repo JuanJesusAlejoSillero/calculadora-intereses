@@ -1133,7 +1133,8 @@
     const tableBodyEl = document.getElementById('table-body');
     const taxNoteEl = document.getElementById('tax-note');
 
-    const storageKey = 'theme';
+    const themeStorageKey = 'theme';
+    const detailModeStorageKey = 'interestDetailMode';
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
     const chartJsUrl = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
 
@@ -1383,13 +1384,18 @@
         themeTextSpan.innerText = 'Modo oscuro';
         themeToggle.setAttribute('aria-pressed', 'false');
       }
-      if (persist) localStorage.setItem(storageKey, theme);
+      if (persist) localStorage.setItem(themeStorageKey, theme);
     }
 
     function resolveTheme() {
-      const saved = localStorage.getItem(storageKey);
+      const saved = localStorage.getItem(themeStorageKey);
       if (saved === 'light' || saved === 'dark') return saved;
       return systemPrefersDark.matches ? 'dark' : 'light';
+    }
+
+    function resolveDetailMode() {
+      const saved = localStorage.getItem(detailModeStorageKey);
+      return saved === 'detailed' ? 'detailed' : 'simple';
     }
 
     function updateTaxNote() {
@@ -1435,8 +1441,9 @@
       setPressedState(tabCombinedEl, chartTab === 'combined');
     }
 
-    function setDetailMode(mode) {
-      detailMode = mode;
+    function setDetailMode(mode, persist = true) {
+      detailMode = mode === 'detailed' ? 'detailed' : 'simple';
+      if (persist) localStorage.setItem(detailModeStorageKey, detailMode);
       syncStatefulControls();
       renderChart(lastRows);
     }
@@ -2048,7 +2055,7 @@
       if (lastRows.length) renderChart(lastRows);
     });
     systemPrefersDark.addEventListener('change', (event) => {
-      if (!localStorage.getItem(storageKey)) {
+      if (!localStorage.getItem(themeStorageKey)) {
         applyTheme(event.matches ? 'dark' : 'light', false);
         if (lastRows.length) renderChart(lastRows);
       }
@@ -2058,6 +2065,7 @@
       startYearInput.value = String(new Date().getFullYear());
     }
     startMonthSelect.value = String(new Date().getMonth());
+    detailMode = resolveDetailMode();
     syncUiLabels();
     syncFrequencyOptions();
     syncStatefulControls();
