@@ -921,7 +921,7 @@
         </div>
 
         <div class="config-grid">
-          <div class="field"><label>Saldo inicial (€)</label><input type="number" id="initial" value="36000" step="100">
+          <div class="field"><label>Capital inicial (€)</label><input type="number" id="initial" value="36000" step="100">
           </div>
           <div class="field"><label>Interés anual (%)</label><input type="number" id="rate" value="3" step="0.1"
               min="0"></div>
@@ -975,7 +975,7 @@
 
         <div class="metrics">
           <div class="metric">
-            <div class="metric-label">Saldo final acumulado</div>
+            <div class="metric-label">Capital final acumulado</div>
             <div class="metric-value" id="total-balance">—</div>
           </div>
           <div class="metric">
@@ -1019,12 +1019,12 @@
                 <th>Ejercicio</th>
                 <th id="table-period-header">Mes</th>
                 <th>Días</th>
-                <th>Saldo inicial</th>
+                <th>Capital inicial</th>
                 <th>Interés bruto (Σ)</th>
                 <th>Carga fiscal (%)</th>
                 <th>Interés neto (Σ)</th>
                 <th>Aportación</th>
-                <th>Saldo final</th>
+                <th>Capital final</th>
               </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -1691,7 +1691,7 @@
       const footHead = document.createElement('tr');
       footHead.className = 'foot-head';
       const periodLabel = tablePeriodHeaderEl.textContent;
-      footHead.innerHTML = `<th>Ejercicio</th><th>${periodLabel}</th><th>Días</th><th>Saldo inicial</th><th>Interés bruto (Σ)</th><th>Carga fiscal (%)</th><th>Interés neto (Σ)</th><th>Aportación</th><th>Saldo final</th>`;
+      footHead.innerHTML = `<th>Ejercicio</th><th>${periodLabel}</th><th>Días</th><th>Capital inicial</th><th>Interés bruto (Σ)</th><th>Carga fiscal (%)</th><th>Interés neto (Σ)</th><th>Aportación</th><th>Capital final</th>`;
       tableBodyEl.appendChild(footHead);
 
       const totalRow = document.createElement('tr');
@@ -1717,7 +1717,7 @@
       const footHead = document.createElement('tr');
       footHead.className = 'foot-head';
       const periodLabel = tablePeriodHeaderEl.textContent;
-      footHead.innerHTML = `<th>Ejercicio</th><th>${periodLabel}</th><th>Días</th><th>Saldo inicial</th><th>Interés bruto (Σ)</th><th>Carga fiscal (%)</th><th>Interés neto (Σ)</th><th>Aportación</th><th>Saldo final</th>`;
+      footHead.innerHTML = `<th>Ejercicio</th><th>${periodLabel}</th><th>Días</th><th>Capital inicial</th><th>Interés bruto (Σ)</th><th>Carga fiscal (%)</th><th>Interés neto (Σ)</th><th>Aportación</th><th>Capital final</th>`;
       tableBodyEl.appendChild(footHead);
 
       const totalRow = document.createElement('tr');
