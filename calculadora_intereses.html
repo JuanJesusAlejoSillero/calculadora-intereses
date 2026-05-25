@@ -1347,7 +1347,9 @@
       tabInterestEl.textContent = config.interestTabLabel;
       startMonthField.style.display = periodMode === 'monthly' ? '' : 'none';
       periodCountInput.max = String(config.countMax);
-      periodCountInput.value = String(getPeriodCount());
+      if (document.activeElement !== periodCountInput) {
+        periodCountInput.value = String(getPeriodCount());
+      }
     }
 
     function getPeriodInfo(index) {
