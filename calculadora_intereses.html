@@ -1688,6 +1688,12 @@
         }
       }
 
+      const footHead = document.createElement('tr');
+      footHead.className = 'foot-head';
+      const periodLabel = tablePeriodHeaderEl.textContent;
+      footHead.innerHTML = `<th>Ejercicio</th><th>${periodLabel}</th><th>Días</th><th>Saldo inicial</th><th>Interés bruto (Σ)</th><th>Carga fiscal (%)</th><th>Interés neto (Σ)</th><th>Aportación</th><th>Saldo final</th>`;
+      tableBodyEl.appendChild(footHead);
+
       const totalRow = document.createElement('tr');
       const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
       const effectiveTax = totals.totalGross > 0 ? fmtPct(totals.totalTax / totals.totalGross * 100) : '—';
@@ -1707,6 +1713,12 @@
         tr.innerHTML = `<td class="year-cell mono">${row.year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${fmt(row.gross)} (${fmt(row.accumGross)})</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${fmt(row.net)} (${fmt(row.accumNet)})</td><td class="mono">${fmt(row.deposit)}</td><td class="mono green">${closingBalance}</td>`;
         tableBodyEl.appendChild(tr);
       }
+
+      const footHead = document.createElement('tr');
+      footHead.className = 'foot-head';
+      const periodLabel = tablePeriodHeaderEl.textContent;
+      footHead.innerHTML = `<th>Ejercicio</th><th>${periodLabel}</th><th>Días</th><th>Saldo inicial</th><th>Interés bruto (Σ)</th><th>Carga fiscal (%)</th><th>Interés neto (Σ)</th><th>Aportación</th><th>Saldo final</th>`;
+      tableBodyEl.appendChild(footHead);
 
       const totalRow = document.createElement('tr');
       const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
