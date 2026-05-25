@@ -1135,6 +1135,7 @@
 
     const themeStorageKey = 'theme';
     const detailModeStorageKey = 'interestDetailMode';
+    const interestStateStorageKey = 'interestCalculatorState';
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
     const chartJsUrl = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
 
@@ -1393,9 +1394,120 @@
       return systemPrefersDark.matches ? 'dark' : 'light';
     }
 
-    function resolveDetailMode() {
-      const saved = localStorage.getItem(detailModeStorageKey);
+    function readStoredInterestState() {
+      try {
+        const rawValue = localStorage.getItem(interestStateStorageKey);
+        if (!rawValue) return null;
+
+        const parsedValue = JSON.parse(rawValue);
+        return parsedValue && typeof parsedValue === 'object' ? parsedValue : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function normalizeStoredDepositList(values) {
+      if (!Array.isArray(values)) return [];
+      return values.map((value) => Math.max(0, Number(value) || 0));
+    }
+
+    function resolveDetailMode(savedState = null) {
+      const saved = savedState && typeof savedState.detailMode === 'string'
+        ? savedState.detailMode
+        : localStorage.getItem(detailModeStorageKey);
       return saved === 'detailed' ? 'detailed' : 'simple';
+    }
+
+    function restoreInterestState() {
+      const savedState = readStoredInterestState();
+      if (!savedState) return null;
+
+      periodMode = savedState.periodMode === 'annual' ? 'annual' : 'monthly';
+      depositMode = savedState.depositMode === 'individual' ? 'individual' : 'global';
+      compound = savedState.compound === false ? false : true;
+      taxEnabled = savedState.taxEnabled === false ? false : true;
+      chartTab = savedState.chartTab === 'interest' || savedState.chartTab === 'combined'
+        ? savedState.chartTab
+        : 'balance';
+      detailMode = resolveDetailMode(savedState);
+
+      const initialValue = Number(savedState.initial);
+      if (Number.isFinite(initialValue) && initialValue >= 0) {
+        initialInput.value = String(initialValue);
+      }
+
+      const rateValue = Number(savedState.rate);
+      if (Number.isFinite(rateValue) && rateValue >= 0) {
+        rateInput.value = String(rateValue);
+      }
+
+      const startMonthValue = parseInt(savedState.startMonth, 10);
+      if (startMonthValue >= 0 && startMonthValue <= 11) {
+        startMonthSelect.value = String(startMonthValue);
+      }
+
+      const startYearValue = parseInt(savedState.startYear, 10);
+      if (startYearValue >= 1900 && startYearValue <= 2100) {
+        startYearInput.value = String(startYearValue);
+      }
+
+      const periodCountValue = parseInt(savedState.periodCount, 10);
+      if (Number.isInteger(periodCountValue)) {
+        periodCountInput.value = String(Math.max(1, Math.min(PERIOD_CONFIG[periodMode].countMax, periodCountValue)));
+      }
+
+      const globalDepositValue = Number(savedState.globalDeposit);
+      if (Number.isFinite(globalDepositValue) && globalDepositValue >= 0) {
+        globalDepositInput.value = String(globalDepositValue);
+      }
+
+      if (savedState.frequencyByMode && typeof savedState.frequencyByMode === 'object') {
+        const savedMonthlyFrequency = parseInt(savedState.frequencyByMode.monthly, 10);
+        const savedAnnualFrequency = parseInt(savedState.frequencyByMode.annual, 10);
+
+        if (FREQUENCY_OPTIONS.monthly.includes(savedMonthlyFrequency)) {
+          frequencyByMode.monthly = savedMonthlyFrequency;
+        }
+
+        if (FREQUENCY_OPTIONS.annual.includes(savedAnnualFrequency)) {
+          frequencyByMode.annual = savedAnnualFrequency;
+        }
+      }
+
+      if (savedState.depositsByMode && typeof savedState.depositsByMode === 'object') {
+        depositsByMode.monthly = normalizeStoredDepositList(savedState.depositsByMode.monthly);
+        depositsByMode.annual = normalizeStoredDepositList(savedState.depositsByMode.annual);
+      }
+
+      return savedState;
+    }
+
+    function persistInterestState() {
+      const payload = {
+        detailMode,
+        periodMode,
+        depositMode,
+        compound,
+        taxEnabled,
+        chartTab,
+        initial: Math.max(0, Number(initialInput.value) || 0),
+        rate: Math.max(0, Number(rateInput.value) || 0),
+        startMonth: parseInt(startMonthSelect.value, 10) || 0,
+        startYear: parseInt(startYearInput.value, 10) || new Date().getFullYear(),
+        periodCount: getPeriodCount(),
+        globalDeposit: Math.max(0, Number(globalDepositInput.value) || 0),
+        frequencyByMode: {
+          monthly: frequencyByMode.monthly,
+          annual: frequencyByMode.annual
+        },
+        depositsByMode: {
+          monthly: depositsByMode.monthly.slice(),
+          annual: depositsByMode.annual.slice()
+        }
+      };
+
+      localStorage.setItem(detailModeStorageKey, detailMode);
+      localStorage.setItem(interestStateStorageKey, JSON.stringify(payload));
     }
 
     function updateTaxNote() {
@@ -1443,7 +1555,7 @@
 
     function setDetailMode(mode, persist = true) {
       detailMode = mode === 'detailed' ? 'detailed' : 'simple';
-      if (persist) localStorage.setItem(detailModeStorageKey, detailMode);
+      if (persist) persistInterestState();
       syncStatefulControls();
       renderChart(lastRows);
     }
@@ -1480,6 +1592,7 @@
       chartTab = tab;
       syncChartTabs();
       renderChart(lastRows);
+      persistInterestState();
     }
 
     function buildGrid() {
@@ -2024,6 +2137,7 @@
       renderTable(rows, { totalGross, totalNet, totalTax, totalDeposits });
       updateTaxNote();
       renderChart(rows);
+      persistInterestState();
     }
 
     initialInput.addEventListener('input', calculate);
@@ -2061,11 +2175,23 @@
       }
     });
 
+    const today = new Date();
+    const restoredInterestState = restoreInterestState();
+
     if (!startYearInput.value || parseInt(startYearInput.value, 10) < 1900) {
-      startYearInput.value = String(new Date().getFullYear());
+      startYearInput.value = String(today.getFullYear());
     }
-    startMonthSelect.value = String(new Date().getMonth());
-    detailMode = resolveDetailMode();
+
+    if (restoredInterestState) {
+      const restoredStartMonth = parseInt(startMonthSelect.value, 10);
+      if (Number.isNaN(restoredStartMonth) || restoredStartMonth < 0 || restoredStartMonth > 11) {
+        startMonthSelect.value = String(today.getMonth());
+      }
+    } else {
+      startMonthSelect.value = String(today.getMonth());
+      detailMode = resolveDetailMode();
+    }
+
     syncUiLabels();
     syncFrequencyOptions();
     syncStatefulControls();

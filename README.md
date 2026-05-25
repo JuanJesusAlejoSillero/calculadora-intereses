@@ -10,7 +10,7 @@
 
 Calculadora web para simular la evolución de un ahorro con interés simple o compuesto, aportaciones periódicas y estimación opcional de la fiscalidad de la base del ahorro en España.
 
-La aplicación **funciona completamente offline y es 100% privada**: todos los cálculos se realizan en el lado del cliente, es decir, en tu navegador, sin enviar ni recibir datos de servidores externos.
+La aplicación **funciona completamente offline y es 100% privada**: todos los cálculos se realizan en el lado del cliente, es decir, en tu navegador, sin enviar ni recibir datos de servidores externos. Además, el navegador recuerda localmente tu última configuración y simulación mediante `localStorage`, sin salir de tu equipo.
 
 ## ⚠️ Descargo de responsabilidad
 
@@ -30,6 +30,8 @@ Los resultados proporcionados por la herramienta son **meramente orientativos** 
 5. Configura la frecuencia de aportación y decide si las aportaciones serán iguales en todos los periodos o distintas en cada uno.
 6. Activa o desactiva `Interés compuesto` y `Calcular impuestos` según el escenario que quieras comparar.
 
+La calculadora recuerda automáticamente en el mismo navegador la vista `Simple` o `Detallada`, el modo mensual o anual, la pestaña de gráfica seleccionada y el último escenario introducido, incluidas las aportaciones por periodo.
+
 [![Vista previa de la calculadora](img/screenshot.png)](img/screenshot-fullpage.png)
 
 ## 🧮 Características
@@ -44,6 +46,7 @@ Los resultados proporcionados por la herramienta son **meramente orientativos** 
 - Estimación opcional de la fiscalidad de la base del ahorro en España 2026.
 - Reinicio automático del cálculo fiscal al cambiar de ejercicio fiscal.
 - Tema claro y oscuro con detección automática del modo preferido en la primera visita.
+- Persistencia local automática de la vista, las preferencias de cálculo y la última simulación usada en ese navegador.
 - Funcionamiento offline, sin depender de servicios externos para los cálculos.
 
 ## ⚙️ Modelo de cálculo
