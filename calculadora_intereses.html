@@ -2016,6 +2016,19 @@
           },
           options: {
             ...sharedOptions,
+            plugins: {
+              ...sharedOptions.plugins,
+              tooltip: {
+                ...sharedOptions.plugins.tooltip,
+                callbacks: {
+                  ...sharedOptions.plugins.tooltip.callbacks,
+                  afterBody: (ctx) => {
+                    const dataIndex = ctx[0].dataIndex;
+                    return `Capital final: ${fmt(rows[dataIndex].baseCapital + rows[dataIndex].interestComponent)}`;
+                  }
+                }
+              }
+            },
             scales: {
               ...sharedOptions.scales,
               x: {
