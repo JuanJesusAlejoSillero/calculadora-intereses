@@ -942,7 +942,7 @@
           <div class="field"><label>Año inicial</label><input type="number" id="start-year" value="2026" min="1900"
               max="2100"></div>
           <div class="field"><label id="count-label">Número de meses</label><input type="number" id="period-count"
-              value="12" min="1" max="240" step="1"></div>
+              value="12" min="1" max="1200" step="1"></div>
           <div class="field"><label id="deposit-frequency-label">Frecuencia de aportación (meses)</label>
             <select id="deposit-frequency">
               <option value="1" selected>Cada mes</option>
@@ -1075,7 +1075,7 @@
     const PERIOD_CONFIG = {
       monthly: {
         countLabel: 'Número de meses',
-        countMax: 240,
+        countMax: 1200,
         frequencyLabel: 'Frecuencia aportación (meses)',
         globalDepositLabel: 'Aportación mensual (€)',
         globalModeLabel: 'Mismo importe todos los meses',
@@ -1086,7 +1086,7 @@
       },
       annual: {
         countLabel: 'Número de años',
-        countMax: 120,
+        countMax: 100,
         frequencyLabel: 'Frecuencia aportación (años)',
         globalDepositLabel: 'Aportación anual (€)',
         globalModeLabel: 'Mismo importe todos los años',
