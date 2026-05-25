@@ -1019,11 +1019,12 @@
                 <th>Ejercicio</th>
                 <th id="table-period-header">Mes</th>
                 <th>Días</th>
-                <th>Saldo base</th>
-                <th>Interés bruto (Σ por año)</th>
+                <th>Saldo inicial</th>
+                <th>Interés bruto (Σ)</th>
                 <th>Carga fiscal (%)</th>
-                <th>Interés neto (Σ total)</th>
+                <th>Interés neto (Σ)</th>
                 <th>Aportación</th>
+                <th>Saldo final</th>
               </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -1661,27 +1662,28 @@
           const taxRate = row.gross > 0 ? fmtPct(row.tax / row.gross * 100) : '—';
           const grossAndAccum = `${fmt(row.gross)} (${fmt(row.accumGross)})`;
           const netAndAccum = `${fmt(row.net)} (${fmt(row.accumNet)})`;
+          const closingBalance = fmt(row.openingPrincipal + row.net + row.deposit);
           if (rowIndex === 0) {
             const yearCellClass = yearIndex !== years.length - 1 ? 'year-cell mono year-no-border' : 'year-cell mono';
-            tr.innerHTML = `<td class="${yearCellClass}" rowspan="${group.length + 1}">${year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
+            tr.innerHTML = `<td class="${yearCellClass}" rowspan="${group.length + 1}">${year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td><td class="mono green">${closingBalance}</td>`;
           } else {
-            tr.innerHTML = `<td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td>`;
+            tr.innerHTML = `<td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${grossAndAccum}</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${netAndAccum}</td><td class="mono">${fmt(row.deposit)}</td><td class="mono green">${closingBalance}</td>`;
           }
           tableBodyEl.appendChild(tr);
         }
 
         const yearTotalRow = document.createElement('tr');
         const yearEffectiveTax = yearTotals.gross > 0 ? fmtPct(yearTotals.tax / yearTotals.gross * 100) : '—';
-        const yearGrossAndAccum = `${fmt(yearTotals.gross)} (${fmt(group[group.length - 1].accumGross)})`;
-        const yearNetAndAccum = `${fmt(yearTotals.net)} (${fmt(group[group.length - 1].accumNet)})`;
+        const yearGrossAndAccum = fmt(yearTotals.gross);
+        const yearNetAndAccum = fmt(yearTotals.net);
         yearTotalRow.className = yearIndex !== years.length - 1 ? 'subtotal-row no-border-bottom' : 'subtotal-row';
-        yearTotalRow.innerHTML = `<td>Total ${year}</td><td class="mono">${yearTotals.days}</td><td class="mono">—</td><td class="mono">${yearGrossAndAccum}</td><td class="${taxCellClass}">${yearEffectiveTax}</td><td class="mono green">${yearNetAndAccum}</td><td class="mono">${fmt(yearTotals.deposits)}</td>`;
+        yearTotalRow.innerHTML = `<td>Total ${year}</td><td class="mono">${yearTotals.days}</td><td class="mono">${fmt(group[0].openingPrincipal)}</td><td class="mono">${yearGrossAndAccum}</td><td class="${taxCellClass}">${yearEffectiveTax}</td><td class="mono green">${yearNetAndAccum}</td><td class="mono">${fmt(yearTotals.deposits)}</td><td class="mono green">${fmt(group[group.length - 1].closingPrincipal)}</td>`;
         tableBodyEl.appendChild(yearTotalRow);
 
         if (yearIndex !== years.length - 1) {
           const separator = document.createElement('tr');
           separator.className = 'year-separator';
-          separator.innerHTML = '<td colspan="8" aria-hidden="true"></td>';
+          separator.innerHTML = '<td colspan="9" aria-hidden="true"></td>';
           tableBodyEl.appendChild(separator);
         }
       }
@@ -1689,8 +1691,10 @@
       const totalRow = document.createElement('tr');
       const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
       const effectiveTax = totals.totalGross > 0 ? fmtPct(totals.totalTax / totals.totalGross * 100) : '—';
+      const lastClosing = rows.length > 0 ? fmt(rows[rows.length - 1].closingPrincipal) : '—';
+      const initialAmount = fmt(parseFloat(initialInput.value) || 0);
       totalRow.className = 'summary-row';
-      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="${taxCellClass}">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
+      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">${initialAmount}</td><td class="mono">${fmt(totals.totalGross)}</td><td class="${taxCellClass}">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td><td class="mono green">${lastClosing}</td>`;
       tableBodyEl.appendChild(totalRow);
     }
 
@@ -1699,15 +1703,18 @@
       for (const row of rows) {
         const tr = document.createElement('tr');
         const taxRate = row.gross > 0 ? fmtPct(row.tax / row.gross * 100) : '—';
-        tr.innerHTML = `<td class="year-cell mono">${row.year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${fmt(row.gross)} (${fmt(row.accumGross)})</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${fmt(row.net)} (${fmt(row.accumNet)})</td><td class="mono">${fmt(row.deposit)}</td>`;
+        const closingBalance = fmt(row.openingPrincipal + row.net + row.deposit);
+        tr.innerHTML = `<td class="year-cell mono">${row.year}</td><td>${row.periodLabel}</td><td class="mono">${row.days}</td><td class="mono">${fmt(row.openingPrincipal)}</td><td class="mono">${fmt(row.gross)} (${fmt(row.accumGross)})</td><td class="${taxCellClass}">${taxRate}</td><td class="mono green">${fmt(row.net)} (${fmt(row.accumNet)})</td><td class="mono">${fmt(row.deposit)}</td><td class="mono green">${closingBalance}</td>`;
         tableBodyEl.appendChild(tr);
       }
 
       const totalRow = document.createElement('tr');
       const totalDays = rows.reduce((sum, row) => sum + row.days, 0);
       const effectiveTax = totals.totalGross > 0 ? fmtPct(totals.totalTax / totals.totalGross * 100) : '—';
+      const lastClosing = rows.length > 0 ? fmt(rows[rows.length - 1].closingPrincipal) : '—';
+      const initialAmount = fmt(parseFloat(initialInput.value) || 0);
       totalRow.className = 'summary-row';
-      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">—</td><td class="mono">${fmt(totals.totalGross)}</td><td class="${taxCellClass}">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td>`;
+      totalRow.innerHTML = `<td colspan="2">Total general</td><td class="mono">${totalDays}</td><td class="mono">${initialAmount}</td><td class="mono">${fmt(totals.totalGross)}</td><td class="${taxCellClass}">${effectiveTax}</td><td class="mono green">${fmt(totals.totalNet)}</td><td class="mono">${fmt(totals.totalDeposits)}</td><td class="mono green">${lastClosing}</td>`;
       tableBodyEl.appendChild(totalRow);
     }
 
@@ -2077,7 +2084,7 @@
       let totalDeposits = 0;
       let totalTax = 0;
       let cumulativeGrossByYear = 0;
-      let cumulativeNet = 0;
+      let cumulativeNetByYear = 0;
       let currentTaxYear = null;
       let taxableGrossForYear = 0;
       const rows = [];
@@ -2088,6 +2095,7 @@
           currentTaxYear = info.taxYear;
           taxableGrossForYear = 0;
           cumulativeGrossByYear = 0;
+          cumulativeNetByYear = 0;
         }
 
         const openingPrincipal = principalBalance;
@@ -2105,7 +2113,7 @@
         principalBalance = openingPrincipal + deposit + (compound ? net : 0);
         if (!compound) liquidInterestBalance += net;
         cumulativeGrossByYear += gross;
-        cumulativeNet += net;
+        cumulativeNetByYear += net;
         taxableGrossForYear += gross;
 
         const totalAssets = principalBalance + liquidInterestBalance;
@@ -2117,6 +2125,7 @@
           axisLabel: info.axisLabel,
           days: info.days,
           openingPrincipal,
+          closingPrincipal: principalBalance,
           gross,
           tax,
           net,
@@ -2125,7 +2134,7 @@
           interestComponent,
           totalAssets,
           accumGross: cumulativeGrossByYear,
-          accumNet: cumulativeNet
+          accumNet: cumulativeNetByYear
         });
 
         const interestCell = document.getElementById(`pi-${index}`);
