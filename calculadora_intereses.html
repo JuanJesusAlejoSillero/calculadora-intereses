@@ -1002,9 +1002,8 @@
 
         <div class="section-title">GRÁFICA</div>
         <div class="chart-tabs detailed-only">
-          <button class="chart-tab active" id="tab-balance">Evolución del patrimonio</button>
-          <button class="chart-tab" id="tab-interest">Intereses mensuales</button>
-          <button class="chart-tab" id="tab-combined">Combinada</button>
+          <button class="chart-tab active" id="tab-combined">Combinada</button>
+          <button class="chart-tab" id="tab-interest">Intereses</button>
         </div>
         <div class="chart-wrap">
           <div id="main-chart" class="chart-surface" role="img" aria-live="polite"></div>
@@ -1130,7 +1129,6 @@
     const totalNetLabelEl = document.getElementById('total-net-label');
     const distributionBarEl = document.getElementById('distribution-bar');
     const distributionLabelEl = document.getElementById('distribution-label');
-    const tabBalanceEl = document.getElementById('tab-balance');
     const tabInterestEl = document.getElementById('tab-interest');
     const tabCombinedEl = document.getElementById('tab-combined');
     const mainChartEl = document.getElementById('main-chart');
@@ -1151,7 +1149,7 @@
     let depositMode = 'global';
     let compound = true;
     let taxEnabled = true;
-    let chartTab = 'balance';
+    let chartTab = 'combined';
     let chartJsAvailable = typeof window.Chart !== 'undefined';
     let chartJsLoadingStarted = false;
     let chartInstance = null;
@@ -1437,7 +1435,7 @@
       taxEnabled = savedState.taxEnabled === false ? false : true;
       chartTab = savedState.chartTab === 'interest' || savedState.chartTab === 'combined'
         ? savedState.chartTab
-        : 'balance';
+        : 'combined';
       detailMode = resolveDetailMode(savedState);
 
       const initialValue = Number(savedState.initial);
@@ -1553,11 +1551,10 @@
     }
 
     function getActiveChartTab() {
-      return detailMode === 'simple' ? 'balance' : chartTab;
+      return detailMode === 'simple' ? 'combined' : chartTab;
     }
 
     function syncChartTabs() {
-      setPressedState(tabBalanceEl, chartTab === 'balance');
       setPressedState(tabInterestEl, chartTab === 'interest');
       setPressedState(tabCombinedEl, chartTab === 'combined');
     }
@@ -1793,9 +1790,7 @@
 
     function renderLegend(tab, palette) {
       const interestLabel = taxEnabled ? 'Interés neto acumulado' : 'Interés acumulado';
-      const items = tab === 'balance'
-        ? [{ label: 'Patrimonio total', color: palette.green }]
-        : tab === 'interest'
+      const items = tab === 'interest'
           ? [{ label: 'Interés bruto', color: palette.grossFill }, { label: interestLabel, color: palette.netFill }]
           : [{ label: 'Capital base', color: palette.blueFill }, { label: interestLabel, color: palette.netFill }];
 
@@ -1804,26 +1799,6 @@
         <span class="legend-dot" style="background:${item.color}"></span>${escapeMarkup(item.label)}
       </div>
     `).join('');
-    }
-
-    function renderBalanceChart(rows, palette, dimensions) {
-      const geometry = buildPlotGeometry(rows.length, dimensions);
-      const ticks = buildTicks(Math.max(...rows.map((row) => row.totalAssets), 1));
-      const maxValue = ticks[ticks.length - 1];
-      const points = geometry.centers.map((center, index) => ({ x: center, y: scaleValue(rows[index].totalAssets, maxValue, dimensions) }));
-      const circles = rows.length <= 36
-        ? points.map((point) => `<circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="3" fill="${palette.green}" />`).join('')
-        : '';
-
-      return `
-      ${renderYAxis(ticks, maxValue, dimensions, palette, 'left', true)}
-      <line x1="${dimensions.marginLeft}" y1="${geometry.plotBottom}" x2="${geometry.plotRight}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
-      <line x1="${dimensions.marginLeft}" y1="${dimensions.marginTop}" x2="${dimensions.marginLeft}" y2="${geometry.plotBottom}" stroke="${palette.border}" stroke-width="1" />
-      <path d="${buildAreaPath(points, geometry.plotBottom)}" fill="${palette.lineFill}" />
-      <path d="${buildLinePath(points)}" fill="none" stroke="${palette.green}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
-      ${circles}
-      ${renderXAxisLabels(rows, geometry.centers, dimensions, palette)}
-    `;
     }
 
     function renderInterestChart(rows, palette, dimensions) {
@@ -1934,27 +1909,7 @@
       blueGradient.addColorStop(1, withAlpha(palette.blue, 0.03));
 
       let config;
-      if (activeTab === 'balance') {
-        config = {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [{
-              label: 'Patrimonio total',
-              data: rows.map((row) => Number(row.totalAssets.toFixed(2))),
-              borderColor: palette.green,
-              backgroundColor: balanceGradient,
-              pointBackgroundColor: palette.green,
-              pointRadius: rows.length > 36 ? 0 : 3,
-              pointHoverRadius: 5,
-              borderWidth: 3,
-              fill: true,
-              tension: 0.34
-            }]
-          },
-          options: sharedOptions
-        };
-      } else if (activeTab === 'interest') {
+      if (activeTab === 'interest') {
         config = {
           type: 'bar',
           data: {
@@ -2024,7 +1979,7 @@
                   ...sharedOptions.plugins.tooltip.callbacks,
                   afterBody: (ctx) => {
                     const dataIndex = ctx[0].dataIndex;
-                    return `Capital final: ${fmt(rows[dataIndex].baseCapital + rows[dataIndex].interestComponent)}`;
+                    return ['', `Capital final: ${fmt(rows[dataIndex].baseCapital + rows[dataIndex].interestComponent)}`];
                   }
                 }
               }
@@ -2045,7 +2000,7 @@
       }
 
       chartInstance = new window.Chart(context, config);
-      mainChartEl.setAttribute('aria-label', `${activeTab === 'balance' ? 'Evolución del patrimonio' : activeTab === 'interest' ? 'Intereses por periodo' : 'Vista combinada'} con ${rows.length} periodos`);
+      mainChartEl.setAttribute('aria-label', `${activeTab === 'interest' ? 'Intereses por periodo' : 'Vista combinada'} con ${rows.length} periodos`);
       renderLegend(activeTab, palette);
     }
 
@@ -2062,8 +2017,7 @@
       };
 
       let chartMarkup = '';
-      if (activeTab === 'balance') chartMarkup = renderBalanceChart(rows, palette, dimensions);
-      else if (activeTab === 'interest') chartMarkup = renderInterestChart(rows, palette, dimensions);
+      if (activeTab === 'interest') chartMarkup = renderInterestChart(rows, palette, dimensions);
       else chartMarkup = renderCombinedChart(rows, palette, dimensions);
 
       mainChartEl.innerHTML = `
@@ -2071,7 +2025,7 @@
         ${chartMarkup}
       </svg>
     `;
-      mainChartEl.setAttribute('aria-label', `${activeTab === 'balance' ? 'Evolución del patrimonio' : activeTab === 'interest' ? 'Intereses por periodo' : 'Vista combinada'} con ${rows.length} periodos`);
+      mainChartEl.setAttribute('aria-label', `${activeTab === 'interest' ? 'Intereses por periodo' : 'Vista combinada'} con ${rows.length} periodos`);
       renderLegend(activeTab, palette);
     }
 
@@ -2200,7 +2154,6 @@
     viewDetailedBtn.addEventListener('click', () => setDetailMode('detailed'));
     periodMonthlyBtn.addEventListener('click', () => setPeriodMode('monthly'));
     periodAnnualBtn.addEventListener('click', () => setPeriodMode('annual'));
-    tabBalanceEl.addEventListener('click', () => setChartTab('balance'));
     tabInterestEl.addEventListener('click', () => setChartTab('interest'));
     tabCombinedEl.addEventListener('click', () => setChartTab('combined'));
 
