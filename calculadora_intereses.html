@@ -96,6 +96,18 @@
       margin-bottom: 1rem;
     }
 
+    .header-toolbar > .nav-link {
+      margin-inline-end: auto;
+    }
+
+    .header-toolbar.is-wrapped {
+      justify-content: center;
+    }
+
+    .header-toolbar.is-wrapped > .nav-link {
+      margin-inline-end: 0;
+    }
+
     .toolbar-group {
       display: inline-flex;
       align-items: center;
@@ -130,6 +142,7 @@
       z-index: 10;
       font-family: inherit;
       color: inherit;
+      text-decoration: none;
     }
 
     .toolbar-switch:hover {
@@ -337,6 +350,7 @@
     .segmented-control {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.25rem;
       padding: 0.25rem;
       border-radius: 40px;
@@ -888,6 +902,9 @@
   <div class="container">
     <header>
       <div class="header-toolbar">
+        <a href="https://sh.juanje.net/salario" target="_blank" rel="noreferrer noopener" class="toolbar-switch nav-link">
+          💰 Calculadora Salario
+        </a>
         <div class="segmented-control" role="group" aria-label="Modo de visualización">
           <button type="button" class="segmented-btn active" id="view-simple" aria-pressed="true">Simple</button>
           <button type="button" class="segmented-btn" id="view-detailed" aria-pressed="false">Detallada</button>
@@ -2194,6 +2211,16 @@
     syncChartTabs();
     ensureChartJs();
     buildGrid();
+
+    // Detect when header-toolbar items wrap to a new line and center them
+    function checkHeaderWrap() {
+      const isNarrow = window.matchMedia('(max-width: 768px)').matches;
+      document.querySelectorAll('.header-toolbar').forEach(tb => {
+        tb.classList.toggle('is-wrapped', isNarrow);
+      });
+    }
+    checkHeaderWrap();
+    window.addEventListener('resize', checkHeaderWrap);
   </script>
 </body>
 
