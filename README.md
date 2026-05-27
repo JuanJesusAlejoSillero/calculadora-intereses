@@ -1,6 +1,7 @@
 # 🏦 Calculadora de Intereses + Base Imponible del Ahorro
 
 - [🏦 Calculadora de Intereses + Base Imponible del Ahorro](#-calculadora-de-intereses--base-imponible-del-ahorro)
+  - [📷 Apariencia](#-apariencia)
   - [⚠️ Descargo de responsabilidad](#️-descargo-de-responsabilidad)
   - [🚀 Uso](#-uso)
   - [🧮 Características](#-características)
@@ -11,6 +12,17 @@
 Calculadora web para simular la evolución de un ahorro con interés simple o compuesto, aportaciones periódicas y estimación opcional de la fiscalidad de la base del ahorro en España.
 
 La aplicación **funciona completamente offline y es 100% privada**: todos los cálculos se realizan en el lado del cliente, es decir, en tu navegador, sin enviar ni recibir datos de servidores externos. Además, el navegador recuerda localmente tu última configuración y simulación mediante `localStorage`, sin salir de tu equipo.
+
+## 📷 Apariencia
+
+<details>
+  <summary><strong>Vista previa de la calculadora - Click en ella para verla al completo</strong></summary>
+  <a href="img/screenshot-fullpage.png" target="_blank">
+    <p align="center">
+      <img src="img/screenshot.png" alt="Vista previa de la calculadora">
+    </p>
+  </a>
+</details>
 
 ## ⚠️ Descargo de responsabilidad
 
@@ -31,8 +43,6 @@ Los resultados proporcionados por la herramienta son **meramente orientativos** 
 6. Activa o desactiva `Interés compuesto` y `Calcular impuestos` según el escenario que quieras comparar.
 
 La calculadora recuerda automáticamente en el mismo navegador la vista `Simple` o `Detallada`, el modo mensual o anual, la pestaña de gráfica seleccionada y el último escenario introducido, incluidas las aportaciones por periodo.
-
-[![Vista previa de la calculadora](img/screenshot.png)](img/screenshot-fullpage.png)
 
 ## 🧮 Características
 
